@@ -60,14 +60,14 @@ export const SummaryPanel: React.FC<SummaryPanelProps> = ({
   return (
     <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-charcoal-900 shadow-sm overflow-hidden">
       {/* Header with Method Switcher & Metadata */}
-      <div className="p-4 sm:p-5 border-b border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-3 bg-slate-50/70 dark:bg-charcoal-950/40">
-        <div>
-          <div className="flex items-center gap-2 mb-1">
+      <div className="p-3.5 sm:p-5 border-b border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-3 bg-slate-50/70 dark:bg-charcoal-950/40">
+        <div className="min-w-0 max-w-full">
+          <div className="flex items-center gap-2 mb-1.5 flex-wrap">
             <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
               Generated Summary
             </span>
             <span className="text-slate-300 dark:text-slate-700">•</span>
-            <span className="text-xs text-slate-600 dark:text-slate-300 font-medium truncate max-w-xs">
+            <span className="text-xs text-slate-600 dark:text-slate-300 font-medium truncate max-w-[180px] sm:max-w-xs" title={documentTitle}>
               {documentTitle}
             </span>
           </div>
@@ -161,9 +161,9 @@ export const SummaryPanel: React.FC<SummaryPanelProps> = ({
       </div>
 
       {/* Summary Body Text */}
-      <div className="p-5 sm:p-6 text-slate-800 dark:text-slate-200 text-sm sm:text-base leading-relaxed space-y-3 font-normal">
+      <div className="p-4 sm:p-6 text-slate-800 dark:text-slate-200 text-sm sm:text-base leading-relaxed space-y-3 font-normal break-words overflow-hidden">
         {summary.text.split('\n\n').map((para, i) => (
-          <p key={i}>{para}</p>
+          <p key={i} className="break-words leading-relaxed">{para}</p>
         ))}
       </div>
     </div>

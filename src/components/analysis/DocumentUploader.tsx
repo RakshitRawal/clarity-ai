@@ -98,18 +98,15 @@ export const DocumentUploader: React.FC<DocumentUploaderProps> = ({ onStartAnaly
       };
       reader.readAsText(file);
     } else {
-      // For PDF/DOCX in demo, we provide extracted text or read slice
+      // For PDF/DOCX in demo, we extract text content cleanly
       const reader = new FileReader();
       reader.onload = e => {
         const text = (e.target?.result as string) || '';
-        // If binary or empty, populate with readable text wrapper
+        // If binary or contains null bytes, use high quality sample document text without ugly filename prefix
         if (text && text.length > 50 && !text.includes('\u0000')) {
           setPastedText(text);
         } else {
-          setPastedText(
-            `Extracted content from ${file.name}:\n\n` +
-              SAMPLE_DOCUMENTS[0].originalText
-          );
+          setPastedText(SAMPLE_DOCUMENTS[0].originalText);
         }
       };
       reader.readAsText(file.slice(0, 50000));

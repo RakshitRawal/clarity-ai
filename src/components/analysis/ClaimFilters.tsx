@@ -30,9 +30,9 @@ export const ClaimFilters: React.FC<ClaimFiltersProps> = ({
   ];
 
   return (
-    <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+    <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-2.5 w-full min-w-0">
       {/* Status Filter Tabs */}
-      <div className="flex items-center gap-1.5 p-1 rounded-xl bg-slate-100 dark:bg-charcoal-800/80 border border-slate-200 dark:border-slate-800 overflow-x-auto">
+      <div className="flex items-center gap-1 p-1 rounded-xl bg-slate-100 dark:bg-charcoal-800/80 border border-slate-200 dark:border-slate-800 overflow-x-auto min-w-0 max-w-full">
         {tabs.map(tab => {
           const isActive = statusFilter === tab.id;
           return (
@@ -40,7 +40,7 @@ export const ClaimFilters: React.FC<ClaimFiltersProps> = ({
               key={tab.id}
               type="button"
               onClick={() => onStatusFilterChange(tab.id as any)}
-              className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg transition-all whitespace-nowrap ${
+              className={`flex items-center gap-1 px-2.5 py-1 text-xs font-semibold rounded-lg transition-all whitespace-nowrap flex-shrink-0 ${
                 isActive
                   ? 'bg-white dark:bg-charcoal-900 text-slate-900 dark:text-white shadow-sm ring-1 ring-slate-200 dark:ring-slate-700'
                   : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
@@ -62,13 +62,13 @@ export const ClaimFilters: React.FC<ClaimFiltersProps> = ({
       </div>
 
       {/* Claim Search Input */}
-      <div className="relative w-full sm:w-64">
+      <div className="relative w-full md:w-56 lg:w-64 flex-shrink-0">
         <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
         <input
           type="text"
           value={searchQuery}
           onChange={e => onSearchChange(e.target.value)}
-          placeholder="Filter claims by text..."
+          placeholder="Filter claims..."
           className="w-full pl-9 pr-3 py-1.5 text-xs rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-charcoal-900 text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-500"
         />
       </div>

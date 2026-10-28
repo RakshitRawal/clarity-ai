@@ -55,29 +55,29 @@ export const ClaimCard: React.FC<ClaimCardProps> = ({
   return (
     <div
       onClick={onSelect}
-      className={`rounded-xl border transition-all duration-200 shadow-sm cursor-pointer ${
+      className={`rounded-xl border transition-all duration-200 shadow-sm cursor-pointer min-w-0 overflow-hidden ${
         statusBorderColors[claim.status]
       } ${statusBgColors[claim.status]}`}
     >
       {/* Header Row */}
-      <div className="p-4 flex items-start justify-between gap-3">
+      <div className="p-3.5 sm:p-4 flex items-start justify-between gap-3 min-w-0">
         <div className="flex-1 min-w-0">
-          <div className="flex flex-wrap items-center gap-2 mb-2">
+          <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 mb-2">
             <ClaimBadge status={claim.status} size="sm" />
 
-            <span className="text-[11px] font-mono text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-charcoal-800 px-2 py-0.5 rounded">
+            <span className="text-[10px] sm:text-[11px] font-mono text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-charcoal-800 px-2 py-0.5 rounded">
               Model Confidence: {(claim.confidenceScore * 100).toFixed(0)}%
             </span>
 
             {claim.sourceLocation?.section && (
-              <span className="text-[11px] text-slate-500 dark:text-slate-400">
+              <span className="text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400 truncate max-w-[180px]">
                 • {claim.sourceLocation.section}
                 {claim.sourceLocation.paragraph ? ` (Para ${claim.sourceLocation.paragraph})` : ''}
               </span>
             )}
           </div>
 
-          <p className="text-sm font-medium text-slate-900 dark:text-slate-100 leading-snug">
+          <p className="text-xs sm:text-sm font-medium text-slate-900 dark:text-slate-100 leading-snug break-words">
             "{claim.claimText}"
           </p>
         </div>
@@ -89,7 +89,7 @@ export const ClaimCard: React.FC<ClaimCardProps> = ({
             setExpanded(!expanded);
           }}
           aria-label={expanded ? 'Collapse claim details' : 'Expand claim details'}
-          className="p-1 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-charcoal-800 transition-colors"
+          className="p-1 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-charcoal-800 transition-colors flex-shrink-0"
         >
           {expanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
         </button>
@@ -97,13 +97,13 @@ export const ClaimCard: React.FC<ClaimCardProps> = ({
 
       {/* Expanded Details Body */}
       {expanded && (
-        <div className="px-4 pb-4 pt-1 border-t border-slate-100 dark:border-slate-800/80 space-y-3 text-xs animate-fade-in">
+        <div className="px-3.5 sm:px-4 pb-4 pt-1 border-t border-slate-100 dark:border-slate-800/80 space-y-3 text-xs animate-fade-in min-w-0">
           {/* Explanation */}
           <div>
             <span className="font-semibold uppercase tracking-wider text-[10px] text-slate-500 dark:text-slate-400 block mb-1">
               Verification Analysis
             </span>
-            <p className="text-slate-700 dark:text-slate-300 leading-relaxed bg-slate-50 dark:bg-charcoal-950/60 p-2.5 rounded-lg border border-slate-200/70 dark:border-slate-800">
+            <p className="text-slate-700 dark:text-slate-300 leading-relaxed bg-slate-50 dark:bg-charcoal-950/60 p-2.5 rounded-lg border border-slate-200/70 dark:border-slate-800 break-words">
               {claim.explanation}
             </p>
           </div>
@@ -111,7 +111,7 @@ export const ClaimCard: React.FC<ClaimCardProps> = ({
           {/* Source Passage (Supporting or Conflicting) */}
           {hasEvidence && (
             <div>
-              <div className="flex items-center justify-between mb-1">
+              <div className="flex items-center justify-between mb-1 gap-2 flex-wrap">
                 <span className="font-semibold uppercase tracking-wider text-[10px] text-slate-500 dark:text-slate-400">
                   {claim.status === 'supported' ? 'Supporting Source Evidence' : 'Conflicting Source Evidence'}
                 </span>
@@ -128,7 +128,7 @@ export const ClaimCard: React.FC<ClaimCardProps> = ({
                 </button>
               </div>
 
-              <blockquote className={`p-2.5 rounded-lg border italic font-serif leading-relaxed text-slate-800 dark:text-slate-200 ${
+              <blockquote className={`p-2.5 rounded-lg border italic font-serif leading-relaxed text-slate-800 dark:text-slate-200 break-words ${
                 claim.status === 'supported'
                   ? 'bg-emerald-50/50 dark:bg-emerald-950/30 border-emerald-200/80 dark:border-emerald-800/50'
                   : claim.status === 'contradicted'

@@ -3,9 +3,12 @@ import { calculateRouge } from './rougeCalculator';
 
 // Split text into coherent sentences
 export function splitIntoSentences(text: string): string[] {
-  return text
-    .replace(/\r\n/g, '\n')
-    .split(/(?<=[.!?])\s+(?=[A-Z0-9"'])/)
+  const cleaned = text
+    .replace(/^Extracted content from [^\n]+:\s*/i, '')
+    .replace(/\r\n/g, '\n');
+
+  return cleaned
+    .split(/\n\s*\n|(?<=[.!?])\s+(?=[A-Z0-9"'])/)
     .map(s => s.trim())
     .filter(s => s.length > 15);
 }

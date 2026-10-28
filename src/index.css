@@ -29,6 +29,11 @@
     outline: 2px solid #6366f1;
     outline-offset: 2px;
   }
+
+  /* Ensure long continuous text strings never blowout flex or grid boxes */
+  p, h1, h2, h3, h4, h5, h6, span, blockquote, td, th, mark {
+    overflow-wrap: break-word;
+  }
 }
 
 /* Custom Sleek Scrollbar */

@@ -41,9 +41,17 @@ export const Sidebar: React.FC<SidebarProps> = ({
   ];
 
   const sidebarContent = (
-    <div className="flex flex-col h-full bg-white dark:bg-charcoal-950 border-r border-slate-200 dark:border-slate-800 transition-all duration-300">
+    <div
+      className={`flex flex-col h-full bg-white dark:bg-charcoal-950 border-r border-slate-200 dark:border-slate-800 transition-all duration-300 ${
+        collapsed ? 'w-20' : 'w-64'
+      }`}
+    >
       {/* Sidebar Header */}
-      <div className={`flex items-center justify-between h-16 px-4 border-b border-slate-200 dark:border-slate-800 ${collapsed ? 'justify-center' : ''}`}>
+      <div
+        className={`flex items-center justify-between h-16 px-4 border-b border-slate-200 dark:border-slate-800 ${
+          collapsed ? 'justify-center' : ''
+        }`}
+      >
         {!collapsed ? (
           <Logo size="md" showTagline={false} />
         ) : (
@@ -132,15 +140,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
   return (
     <>
-      {/* Desktop Sidebar */}
+      {/* Desktop Sidebar: in-flow sticky container so it pushes the main content instead of overlapping */}
       <aside
-        className={`hidden md:block flex-shrink-0 transition-all duration-300 z-30 ${
+        className={`hidden md:flex flex-col flex-shrink-0 sticky top-0 h-screen z-30 transition-all duration-300 overflow-hidden ${
           collapsed ? 'w-20' : 'w-64'
         }`}
       >
-        <div className="fixed top-0 bottom-0 left-0 w-inherit z-30">
-          {sidebarContent}
-        </div>
+        {sidebarContent}
       </aside>
 
       {/* Mobile Drawer Backdrop */}
@@ -157,7 +163,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
           mobileOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
-        {sidebarContent}
+        <div className="w-72 h-full">
+          {sidebarContent}
+        </div>
       </div>
     </>
   );

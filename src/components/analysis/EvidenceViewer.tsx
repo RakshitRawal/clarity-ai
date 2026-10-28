@@ -40,7 +40,7 @@ export const EvidenceViewer: React.FC<EvidenceViewerProps> = ({
   const renderHighlightedContent = () => {
     if (!targetQuote && !searchTerm) {
       return (
-        <div className="whitespace-pre-wrap font-serif text-sm leading-relaxed text-slate-800 dark:text-slate-200">
+        <div className="whitespace-pre-wrap break-words font-serif text-sm leading-relaxed text-slate-800 dark:text-slate-200">
           {originalText}
         </div>
       );
@@ -50,7 +50,7 @@ export const EvidenceViewer: React.FC<EvidenceViewerProps> = ({
     const highlightTarget = searchTerm.trim() || targetQuote.trim();
     if (!highlightTarget) {
       return (
-        <div className="whitespace-pre-wrap font-serif text-sm leading-relaxed text-slate-800 dark:text-slate-200">
+        <div className="whitespace-pre-wrap break-words font-serif text-sm leading-relaxed text-slate-800 dark:text-slate-200">
           {originalText}
         </div>
       );
@@ -62,7 +62,7 @@ export const EvidenceViewer: React.FC<EvidenceViewerProps> = ({
 
     if (idx === -1) {
       return (
-        <div className="whitespace-pre-wrap font-serif text-sm leading-relaxed text-slate-800 dark:text-slate-200">
+        <div className="whitespace-pre-wrap break-words font-serif text-sm leading-relaxed text-slate-800 dark:text-slate-200">
           {originalText}
         </div>
       );
@@ -82,11 +82,11 @@ export const EvidenceViewer: React.FC<EvidenceViewerProps> = ({
         : 'bg-emerald-200/80 dark:bg-emerald-950/80 text-emerald-950 dark:text-emerald-100 ring-2 ring-emerald-400';
 
     return (
-      <div className="whitespace-pre-wrap font-serif text-sm leading-relaxed text-slate-800 dark:text-slate-200">
+      <div className="whitespace-pre-wrap break-words font-serif text-sm leading-relaxed text-slate-800 dark:text-slate-200">
         <span>{before}</span>
         <mark
           ref={highlightRef}
-          className={`px-1.5 py-0.5 rounded transition-all duration-300 font-medium ${highlightStyle}`}
+          className={`px-1.5 py-0.5 rounded transition-all duration-300 font-medium break-all ${highlightStyle}`}
         >
           {match}
         </mark>
@@ -98,20 +98,20 @@ export const EvidenceViewer: React.FC<EvidenceViewerProps> = ({
   const wordCount = originalText.trim().split(/\s+/).length;
 
   return (
-    <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-charcoal-900 shadow-sm flex flex-col h-full max-h-[750px] overflow-hidden">
+    <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-charcoal-900 shadow-sm flex flex-col h-full max-h-[750px] overflow-hidden min-w-0">
       {/* Top Header */}
-      <div className="p-4 border-b border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-charcoal-950/40 flex flex-wrap items-center justify-between gap-3 flex-shrink-0">
-        <div>
+      <div className="p-3.5 sm:p-4 border-b border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-charcoal-950/40 flex flex-wrap items-center justify-between gap-2.5 flex-shrink-0">
+        <div className="min-w-0 max-w-[220px] sm:max-w-xs">
           <div className="flex items-center gap-2">
-            <FileText className="w-4 h-4 text-brand-600 dark:text-brand-400" />
-            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
+            <FileText className="w-4 h-4 text-brand-600 dark:text-brand-400 flex-shrink-0" />
+            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 truncate">
               Original Document Evidence
             </h3>
-            <span className="text-[11px] font-mono text-slate-500 dark:text-slate-400 bg-slate-200/60 dark:bg-charcoal-800 px-2 py-0.5 rounded">
+            <span className="text-[11px] font-mono text-slate-500 dark:text-slate-400 bg-slate-200/60 dark:bg-charcoal-800 px-2 py-0.5 rounded flex-shrink-0">
               {wordCount} words
             </span>
           </div>
-          <p className="text-xs text-slate-500 dark:text-slate-400 truncate max-w-sm mt-0.5">
+          <p className="text-xs text-slate-500 dark:text-slate-400 truncate mt-0.5" title={documentTitle}>
             {documentTitle}
           </p>
         </div>
