@@ -1,0 +1,148 @@
+import { BenchmarkComparisonItem } from '../types';
+
+export interface DatasetBenchmark {
+  id: string;
+  name: string;
+  domain: string;
+  description: string;
+  sampleCount: number;
+  methods: BenchmarkComparisonItem[];
+}
+
+export const DATASET_BENCHMARKS: DatasetBenchmark[] = [
+  {
+    id: 'govreport-subset',
+    name: 'GovReport Benchmark (Long-Form Policy Documents)',
+    domain: 'Public Policy & Government Reports',
+    description: 'Evaluation benchmark conducted on 250 U.S. GAO and Congressional Research Service long-form reports. Demonstrates trade-offs between ROUGE metrics and factual consistency in complex public governance texts.',
+    sampleCount: 250,
+    methods: [
+      {
+        method: 'Lead-3',
+        rouge1: 0.392,
+        rouge2: 0.158,
+        rougeL: 0.344,
+        factualConsistency: 98.4,
+        hallucinationRate: 1.6,
+        averageLatencyMs: 12,
+        sampleSummary: 'The Government Accountability Office examined federal climate resilience spending across 14 executive agencies. Federal outlays reached $32 billion between FY 2021 and 2025. Agency coordination mechanisms remain fragmented across regional offices.',
+        keyStrengths: ['Zero latency', '100% faithful to leading sentences', 'No generative hallucination risk'],
+        keyRisks: ['Misses body conclusions', 'Poor compression efficiency', 'Biased toward introductory verbiage'],
+      },
+      {
+        method: 'Extractive (LexRank/BERT)',
+        rouge1: 0.448,
+        rouge2: 0.204,
+        rougeL: 0.398,
+        factualConsistency: 96.8,
+        hallucinationRate: 3.2,
+        averageLatencyMs: 240,
+        sampleSummary: 'Federal climate resilience outlays totaled $32 billion across 14 agencies between FY 2021 and 2025. The Comptroller General identified 48 unaddressed recommendations regarding flood mapping. Regional office inter-agency oversight groups lacked standardized monitoring metrics.',
+        keyStrengths: ['Verbatim factual reliability', 'Covers salient sections across whole document', 'Zero invented figures'],
+        keyRisks: ['Choppy transitions between sentences', 'Lower narrative fluency', 'Pronoun reference ambiguity'],
+      },
+      {
+        method: 'Abstractive (Fine-Tuned LLM)',
+        rouge1: 0.512,
+        rouge2: 0.258,
+        rougeL: 0.456,
+        factualConsistency: 71.4,
+        hallucinationRate: 28.6,
+        averageLatencyMs: 1480,
+        sampleSummary: 'GAO discovered that 14 federal agencies failed to audit $58 billion in climate resilience funds, leading the President to terminate regional oversight committees immediately. 100% of coastal flood protection projects have experienced severe schedule lapses.',
+        keyStrengths: ['Exceptional fluency and readability', 'Synthesizes disparate sections naturally', 'Highest ROUGE overlap'],
+        keyRisks: ['Subtle numerical alterations ($32B -> $58B)', 'Extrapolates nonexistent presidential terminations', 'Catastrophic failure in high-stakes compliance'],
+      },
+    ],
+  },
+  {
+    id: 'pubmed-health-reports',
+    name: 'PubMed / WHO Health Protocol Benchmark',
+    domain: 'Public Health & Clinical Guidelines',
+    description: 'Evaluated against 180 peer-reviewed clinical guidelines and WHO epidemiologic memos. Evaluates risks when abstractive models invert contraindications or misstate dosages.',
+    sampleCount: 180,
+    methods: [
+      {
+        method: 'Lead-3',
+        rouge1: 0.364,
+        rouge2: 0.142,
+        rougeL: 0.318,
+        factualConsistency: 99.1,
+        hallucinationRate: 0.9,
+        averageLatencyMs: 10,
+        sampleSummary: 'This clinical guidance establishes updated prophylactic guidelines for multi-drug resistant bacterial infections in acute hospital settings. Surveillance culture protocols must be executed at 48-hour intervals. Hand hygiene compliance benchmarks remain set at 95 percent.',
+        keyStrengths: ['High safety guarantee', 'Never alters dosage metrics'],
+        keyRisks: ['Omits specific clinical criteria in later tables'],
+      },
+      {
+        method: 'Extractive (LexRank/BERT)',
+        rouge1: 0.426,
+        rouge2: 0.191,
+        rougeL: 0.381,
+        factualConsistency: 97.4,
+        hallucinationRate: 2.6,
+        averageLatencyMs: 195,
+        sampleSummary: 'Surveillance cultures should be obtained at 48-hour intervals for intensive care patients with confirmed colonization. Meropenem dosing requires downward titration in renal failure stages 3b through 5. Hand hygiene compliance benchmarks remain set at 95 percent.',
+        keyStrengths: ['Retains precise pharmacology and lab parameters', 'Reliable for healthcare professionals'],
+        keyRisks: ['Sentence concatenation lacks human stylistic cohesion'],
+      },
+      {
+        method: 'Abstractive (Fine-Tuned LLM)',
+        rouge1: 0.495,
+        rouge2: 0.244,
+        rougeL: 0.442,
+        factualConsistency: 68.2,
+        hallucinationRate: 31.8,
+        averageLatencyMs: 1320,
+        sampleSummary: 'Hospitalized patients should receive empirical Meropenem without renal adjustments unless severe septic shock ensues. Surveillance cultures are optional if hand hygiene adherence reaches 80 percent across all wards.',
+        keyStrengths: ['Reads like an expert medical brief', 'High ROUGE-2 overlap with reference summaries'],
+        keyRisks: ['Inverts critical contraindications', 'Fatal hazard if deployed without claim-level verification'],
+      },
+    ],
+  },
+  {
+    id: 'sec-edgar-filings',
+    name: 'SEC 10-K & Regulatory Disclosures Benchmark',
+    domain: 'Financial Filings & Statutory Disclosures',
+    description: 'Benchmarked across 320 statutory annual reports. Evaluates balance sheet debt obligations, revenue disclosures, and risk factor claims.',
+    sampleCount: 320,
+    methods: [
+      {
+        method: 'Lead-3',
+        rouge1: 0.381,
+        rouge2: 0.162,
+        rougeL: 0.339,
+        factualConsistency: 99.5,
+        hallucinationRate: 0.5,
+        averageLatencyMs: 11,
+        sampleSummary: 'Item 1: Business Overview. The Registrant is a diversified financial services enterprise operating primarily in the United States and Canada. Total consolidated assets stood at $482 billion at fiscal year-end 2025. Net interest margin expanded by 14 basis points.',
+        keyStrengths: ['Faithful to opening item statements', 'Zero fabricated accounting ratios'],
+        keyRisks: ['Omits downstream liquidity risk disclosures'],
+      },
+      {
+        method: 'Extractive (LexRank/BERT)',
+        rouge1: 0.462,
+        rouge2: 0.221,
+        rougeL: 0.415,
+        factualConsistency: 98.1,
+        hallucinationRate: 1.9,
+        averageLatencyMs: 220,
+        sampleSummary: 'Consolidated assets stood at $482 billion at fiscal year-end 2025. Tier 1 common equity risk-weighted capital ratio reached 12.8 percent. Outstanding commercial real estate mortgage maturities over the next 24 months total $14.6 billion.',
+        keyStrengths: ['Preserves monetary numbers and maturity schedules', 'Safe for compliance scrutiny'],
+        keyRisks: ['Requires table extraction pre-processing'],
+      },
+      {
+        method: 'Abstractive (Fine-Tuned LLM)',
+        rouge1: 0.534,
+        rouge2: 0.281,
+        rougeL: 0.482,
+        factualConsistency: 74.0,
+        hallucinationRate: 26.0,
+        averageLatencyMs: 1610,
+        sampleSummary: 'The company reported historic asset growth to $582 billion with capital ratios surging to 18 percent. Commercial real estate exposure has been liquidated with no remaining debt maturities through 2028.',
+        keyStrengths: ['Smooth executive presentation style', 'Leader on standard ROUGE competition leaderboards'],
+        keyRisks: ['Altered $482B to $582B', 'Invented complete debt liquidation', 'Violates securities disclosure laws'],
+      },
+    ],
+  },
+];
