@@ -1,0 +1,18 @@
+# Render Deployment Blueprint for ClarityAI Full-Stack Platform
+services:
+  # Unified Web Service (Serves both the React Frontend & Python NLP Engine)
+  - type: web
+    name: clarity-ai
+    env: python
+    region: oregon
+    plan: free
+    buildCommand: "npm install && npm run build"
+    startCommand: "python3 backend/server.py"
+    envVars:
+      - key: PORT
+        value: 10000
+      - key: PYTHON_VERSION
+        value: 3.11.9
+      - key: NODE_VERSION
+        value: 20.12.2
+    autoDeploy: true

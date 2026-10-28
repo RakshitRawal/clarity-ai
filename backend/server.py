@@ -13,6 +13,7 @@ import sys
 import os
 import json
 import time
+import mimetypes
 from typing import Any, Dict, Optional, List
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from socketserver import ThreadingMixIn
@@ -20,6 +21,8 @@ import urllib.parse
 
 # Ensure local backend imports resolve
 sys.path.insert(0, os.path.dirname(__file__))
+
+DIST_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "dist"))
 
 from nlp_engine import run_full_pipeline
 from database import (
@@ -71,16 +74,56 @@ class ClarityAPIHandler(BaseHTTPRequestHandler):
         except Exception as e:
             raise ValueError(f"Invalid JSON payload: {str(e)}")
 
+    def serve_static(self, path: str):
+        if not os.path.exists(DIST_DIR):
+            self.send_error_json(404, "Frontend build not found. Run 'npm run build' first.")
+            return
+
+        clean_path = path.lstrip("/")
+        if not clean_path or clean_path == "index.html":
+            file_path = os.path.join(DIST_DIR, "index.html")
+        else:
+            file_path = os.path.join(DIST_DIR, clean_path)
+
+        # Fallback to index.html for SPA routes (e.g. /app/overview, /app/new)
+        if not os.path.exists(file_path) or os.path.isdir(file_path):
+            file_path = os.path.join(DIST_DIR, "index.html")
+
+        if not os.path.exists(file_path):
+            self.send_error_json(404, "Page not found.")
+            return
+
+        mime_type, _ = mimetypes.guess_type(file_path)
+        mime_type = mime_type or "application/octet-stream"
+        if file_path.endswith(".js"):
+            mime_type = "application/javascript"
+        elif file_path.endswith(".css"):
+            mime_type = "text/css"
+        elif file_path.endswith(".svg"):
+            mime_type = "image/svg+xml"
+
+        try:
+            with open(file_path, "rb") as f:
+                content = f.read()
+            self.send_response(200)
+            self.send_header("Content-Type", f"{mime_type}; charset=utf-8" if ("text" in mime_type or "javascript" in mime_type or "json" in mime_type) else mime_type)
+            self.send_header("Content-Length", str(len(content)))
+            self.send_cors_headers()
+            self.end_headers()
+            self.wfile.write(content)
+        except Exception as e:
+            self.send_error_json(500, f"Error reading static file: {str(e)}")
+
     def do_GET(self):
         parsed = urllib.parse.urlparse(self.path)
         path = parsed.path.rstrip("/")
 
         # Health check
-        if path == "/health" or path == "":
+        if path == "/health":
             self.send_json(200, {
                 "status": "ok",
                 "version": "1.0.0",
-                "service": "ClarityAI Factual Verification Engine",
+                "service": "ClarityAI Unified Full-Stack Server",
                 "supportedModels": [
                     "mistral-7b-instruct-q4",
                     "llama-3-8b-instruct",
@@ -110,7 +153,8 @@ class ClarityAPIHandler(BaseHTTPRequestHandler):
                 self.send_error_json(404, f"Document '{doc_id}' not found.")
             return
 
-        self.send_error_json(404, f"Endpoint '{self.path}' not found.")
+        # Any other GET path serves static frontend SPA assets!
+        self.serve_static(parsed.path)
 
     def do_POST(self):
         parsed = urllib.parse.urlparse(self.path)
