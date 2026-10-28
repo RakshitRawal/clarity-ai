@@ -146,6 +146,11 @@ export const DocumentProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       checked: true,
       error: res.error,
     });
+    // Auto-enable live Python backend mode when backend server is running
+    if (res.online) {
+      setIsLiveBackendState(true);
+      apiService.saveConfig({ isLiveBackend: true });
+    }
   };
 
   useEffect(() => {
@@ -197,7 +202,6 @@ export const DocumentProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     abortControllerRef.current = new AbortController();
 
     try {
-      // Simulate real stages visually so the user can follow pipeline steps
       const stageDelay = (ms: number) =>
         new Promise((resolve, reject) => {
           const timer = setTimeout(resolve, ms);
@@ -207,15 +211,15 @@ export const DocumentProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           });
         });
 
-      await stageDelay(600);
+      await stageDelay(400);
       setAnalysisStage(2);
       setAnalysisStageLabel(STAGES[1]);
 
       let summaryResult: DocumentSummary;
 
       if (isLiveBackend) {
-        // Attempt live API
-        const apiRes = await apiService.analyzeDocument({
+        // Run against live Python backend
+        const apiPromise = apiService.analyzeDocument({
           documentText: params.documentText,
           documentTitle: params.documentTitle,
           method: params.method,
@@ -223,21 +227,35 @@ export const DocumentProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           referenceSummary: params.referenceSummary,
         });
 
+        await stageDelay(400);
+        setAnalysisStage(3);
+        setAnalysisStageLabel(STAGES[2]);
+
+        await stageDelay(450);
+        setAnalysisStage(4);
+        setAnalysisStageLabel(STAGES[3]);
+
+        const apiRes = await apiPromise;
+
+        await stageDelay(350);
+        setAnalysisStage(5);
+        setAnalysisStageLabel(STAGES[4]);
+
         if (!apiRes.success || !apiRes.data) {
           throw new Error(apiRes.error || 'Live backend failed to return summary');
         }
         summaryResult = apiRes.data;
       } else {
         // High-fidelity client heuristic analysis
-        await stageDelay(750);
+        await stageDelay(650);
         setAnalysisStage(3);
         setAnalysisStageLabel(STAGES[2]);
 
-        await stageDelay(800);
+        await stageDelay(700);
         setAnalysisStage(4);
         setAnalysisStageLabel(STAGES[3]);
 
-        await stageDelay(650);
+        await stageDelay(550);
         setAnalysisStage(5);
         setAnalysisStageLabel(STAGES[4]);
 

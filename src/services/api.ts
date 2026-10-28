@@ -33,7 +33,7 @@ export interface HealthCheckResponse {
 const DEFAULT_CONFIG: ApiConfig = {
   backendUrl: 'http://localhost:8000',
   apiKey: '',
-  isLiveBackend: false, // Default to demo mode with explicit indicator
+  isLiveBackend: true, // Default to live Python backend
   selectedModel: 'mistral-7b-instruct-q4',
   verificationThreshold: 0.75,
   retrieveTopK: 5,

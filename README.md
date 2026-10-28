@@ -86,25 +86,24 @@ Standard generative language models produce persuasive summaries of public white
 
 ---
 
-## 5. (Optional) Running the Python Backend Service
+## 5. Running the Python Backend Service
 
-To connect the application to a live Python summarisation and verification backend:
+ClarityAI includes a production Python backend featuring:
+- **Persistent SQLite Database:** Saves documents, claims, and audit history to `backend/clarity.db`.
+- **LexRank Extractive Summarisation:** Zero-hallucination graph centrality sentence scoring.
+- **Claim-Level Factual Verification:** BM25 semantic passage search, numerical disparity checks, and negation detection.
+- **Zero-Dependency Server:** Runs out-of-the-box on any standard Python 3 installation!
 
-1. Install Python dependencies:
-   ```bash
-   cd backend
-   pip install -r requirements.txt
-   ```
+### Start Backend Manually
+```bash
+python3 backend/server.py
+```
+*Runs on `http://localhost:8000` with endpoints `/health`, `POST /api/v1/summarize-and-verify`, and `GET /api/v1/documents`.*
 
-2. Start the FastAPI server:
-   ```bash
-   python3 -m uvicorn main:app --reload --port 8000
-   ```
-
-3. In the ClarityAI web application:
-   - Navigate to **Settings** (`/app/settings`).
-   - Switch execution mode to **Live Python Backend API**.
-   - Click **Ping /health** to confirm connection.
+### Start Full-Stack (Frontend + Backend in One Command)
+```bash
+./start.sh
+```
 
 ---
 
