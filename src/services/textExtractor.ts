@@ -160,10 +160,81 @@ export async function extractTextFromDocx(file: File): Promise<string> {
   return '';
 }
 
+export interface ExtractedDocumentResult {
+  text: string;
+  wordCount: number;
+  isScanned: boolean;
+  detectedWatermark?: string;
+}
+
+const BOILERPLATE_PATTERNS = [
+  /downloaded from/i,
+  /secure learning platform/i,
+  /scholix\.app/i,
+  /all rights reserved/i,
+  /copyright\s*(?:©|\(c\))?/i,
+  /page \d+\s*(?:of|\/)\s*\d+/i,
+  /www\.[a-z0-9\-]+\.[a-z]+/i,
+  /https?:\/\/[^\s]+/i,
+  /watermark/i,
+  /confidential\s*draft/i,
+];
+
+/**
+ * Filter out repetitive page headers, footers, and website watermarks
+ */
+export function cleanWatermarksAndBoilerplate(rawText: string): {
+  cleanedText: string;
+  watermarkFound?: string;
+  removedCount: number;
+} {
+  const normalized = rawText.replace(/\r\n|\r/g, '\n');
+  const lines = normalized.split('\n');
+
+  // Count line frequencies across pages
+  const lineCounts = new Map<string, number>();
+  for (const line of lines) {
+    const s = line.trim();
+    if (s.length > 0) {
+      lineCounts.set(s, (lineCounts.get(s) || 0) + 1);
+    }
+  }
+
+  const validLines: string[] = [];
+  let watermarkFound: string | undefined;
+  let removedCount = 0;
+
+  for (const line of lines) {
+    const s = line.trim();
+    if (!s) continue;
+
+    // Check boilerplate patterns
+    const isBoilerplate = BOILERPLATE_PATTERNS.some(pat => pat.test(s));
+    // Check if line repeats on 3 or more pages (standard PDF header/footer)
+    const isRepeatedWatermark = (lineCounts.get(s) || 0) >= 3;
+
+    if (isBoilerplate || isRepeatedWatermark) {
+      removedCount++;
+      if (!watermarkFound) {
+        watermarkFound = s.length > 50 ? s.slice(0, 47) + '...' : s;
+      }
+      continue;
+    }
+
+    validLines.push(line);
+  }
+
+  return {
+    cleanedText: validLines.join('\n').trim(),
+    watermarkFound,
+    removedCount,
+  };
+}
+
 /**
  * Universal file text extraction entrypoint
  */
-export async function extractDocumentText(file: File): Promise<{ text: string; wordCount: number }> {
+export async function extractDocumentText(file: File): Promise<ExtractedDocumentResult> {
   const ext = '.' + file.name.split('.').pop()?.toLowerCase();
   let extracted = '';
 
@@ -177,15 +248,23 @@ export async function extractDocumentText(file: File): Promise<{ text: string; w
     extracted = await file.text();
   }
 
-  // Clean and normalize
-  const cleaned = extracted
-    .replace(/\u0000/g, '')
-    .replace(/\r\n/g, '\n')
-    .trim();
+  // Clean raw null bytes
+  const sanitized = extracted.replace(/\u0000/g, '').trim();
 
-  const words = cleaned ? cleaned.split(/\s+/).filter(w => w.length > 0) : [];
+  // Strip watermarks and boilerplate
+  const { cleanedText, watermarkFound } = cleanWatermarksAndBoilerplate(sanitized);
+
+  const words = cleanedText ? cleanedText.split(/\s+/).filter(w => w.length > 0) : [];
+  const rawWords = sanitized ? sanitized.split(/\s+/).filter(w => w.length > 0) : [];
+
+  // If after stripping watermarks, fewer than 15 words remain while the raw had repeating headers,
+  // it is a scanned/image-based PDF!
+  const isScanned = ext === '.pdf' && words.length < 20 && rawWords.length > 0;
+
   return {
-    text: cleaned,
-    wordCount: words.length,
+    text: words.length >= 20 ? cleanedText : sanitized,
+    wordCount: words.length >= 20 ? words.length : rawWords.length,
+    isScanned,
+    detectedWatermark: watermarkFound,
   };
 }

@@ -96,7 +96,12 @@ export const DocumentUploader: React.FC<DocumentUploaderProps> = ({ onStartAnaly
     setIsExtracting(true);
     try {
       const extracted = await extractDocumentText(file);
-      if (extracted.text && extracted.wordCount >= 10) {
+      if (extracted.isScanned) {
+        setErrorMessage(
+          `Scanned Document Detected: "${file.name}" contains image-based or handwritten pages without selectable text (only repeated website headers like "${extracted.detectedWatermark || 'watermarks'}" were detected). Please paste your text or notes directly into the editor below.`
+        );
+        setPastedText('');
+      } else if (extracted.text && extracted.wordCount >= 10) {
         setPastedText(extracted.text);
       } else {
         setErrorMessage(

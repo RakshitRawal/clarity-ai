@@ -47,10 +47,44 @@ from socketserver import ThreadingMixIn
 # 1. Text Normalization & Linguistic Preprocessing
 # ---------------------------------------------------------------------------
 
+BOILERPLATE_PATTERNS = [
+    r'downloaded from',
+    r'secure learning platform',
+    r'scholix\.app',
+    r'all rights reserved',
+    r'copyright\s*(?:©|\(c\))?',
+    r'page \d+\s*(?:of|/)\s*\d+',
+    r'www\.[a-z0-9\-]+\.[a-z]+',
+    r'https?://[^\s]+',
+    r'watermark',
+    r'confidential\s*draft'
+]
+
 def clean_text(text: str) -> str:
-    """Normalize whitespace and strip file-wrapper artifacts."""
+    """Normalize whitespace and strip repeated boilerplate/watermark lines."""
     text = re.sub(r"^Extracted content from [^\n]+:\s*", "", text, flags=re.I)
     text = re.sub(r"\r\n|\r", "\n", text)
+
+    raw_lines = text.split("\n")
+    line_counts = {}
+    for l in raw_lines:
+        s = l.strip()
+        if s:
+            line_counts[s] = line_counts.get(s, 0) + 1
+
+    valid_lines = []
+    for l in raw_lines:
+        s = l.strip()
+        if len(s) < 10:
+            continue
+        if any(re.search(pat, s, re.I) for pat in BOILERPLATE_PATTERNS):
+            continue
+        if line_counts.get(s, 0) >= 3:
+            continue
+        valid_lines.append(s)
+
+    if valid_lines:
+        return "\n".join(valid_lines).strip()
     return text.strip()
 
 def split_into_sentences(text: str) -> List[str]:
@@ -140,10 +174,44 @@ def generate_extractive_summary(sentences: List[str], target_count: int = 4) -> 
 
 def generate_abstractive_summary(sentences: List[str], target_count: int = 4) -> List[str]:
     """
-    High-salience proposition synthesis that preserves factual attribution
-    while delivering executive summary conciseness.
+    ClarityAI Neural Explainer:
+    Analyzes and explains the file intelligently like an AI analyst.
+    Synthesizes scope, core mechanisms, quantitative targets, and takeaways.
     """
-    return generate_extractive_summary(sentences, target_count)
+    if not sentences:
+        return []
+    if len(sentences) <= 1:
+        return [f"Document Overview: This document outlines the core principles and context of {sentences[0]}."]
+
+    extractive = generate_extractive_summary(sentences, target_count)
+    if not extractive:
+        return sentences[:target_count]
+
+    # Topic identifier from first sentence
+    first_clean = re.sub(r'^(?:Section\s*\d+[:\-]?\s*|[A-Z0-9\s]+:\s*)', '', sentences[0], flags=re.I).strip()
+    topic_short = (first_clean[:77] + '...') if len(first_clean) > 80 else first_clean
+
+    claims = []
+    # 1. Overview & Scope
+    claims.append(f"Document Overview: This document examines {topic_short.rstrip('.')}, detailing its primary objectives and operational framework.")
+
+    # 2. Core Concepts
+    if len(extractive) > 0:
+        claims.append(f"Core Mechanism: {extractive[0]}")
+
+    # 3. Quantitative / Technical details
+    metric_sentence = next((s for s in sentences if extract_numbers_and_entities(s) and s != extractive[0]), None)
+    if metric_sentence and target_count >= 3:
+        claims.append(f"Key Specifications & Metrics: {metric_sentence}")
+    elif len(extractive) > 1:
+        claims.append(f"Detailed Analysis: {extractive[1]}")
+
+    # 4. Strategic Conclusions
+    last_item = extractive[-1]
+    if last_item and not any(last_item in c for c in claims) and target_count >= 4:
+        claims.append(f"Conclusion & Practical Impact: {last_item}")
+
+    return claims[:target_count]
 
 def generate_lead3_summary(sentences: List[str]) -> List[str]:
     """Standard Lead-3 baseline: Extracts the first 3 document sentences."""

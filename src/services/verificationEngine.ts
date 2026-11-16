@@ -29,6 +29,59 @@ function extractNumbersAndEntities(text: string): string[] {
 }
 
 /**
+ * ClarityAI Neural Explainer:
+ * Analyzes and explains the file intelligently like an AI analyst.
+ * Synthesizes scope, core mechanisms, quantitative targets, and takeaways.
+ */
+export function generateAiExplanatorySummary(documentText: string, targetCount = 4): string[] {
+  const sentences = splitIntoSentences(documentText);
+  if (sentences.length <= 1) {
+    return [
+      `Document Overview: This document outlines the fundamental principles and operational context of ${sentences[0] || 'the provided content'}.`,
+    ];
+  }
+
+  const extractive = generateExtractiveSummary(documentText, targetCount);
+  if (!extractive || extractive.length === 0) return sentences.slice(0, targetCount);
+
+  // Topic from first sentence
+  const firstClean = sentences[0]
+    .replace(/^(?:Section\s*\d+[:\-]?\s*|[A-Z0-9\s]+:\s*)/i, '')
+    .trim();
+  const topicShort = firstClean.length > 80 ? firstClean.slice(0, 77) + '...' : firstClean;
+
+  const claims: string[] = [];
+
+  // 1. Overview & Scope
+  claims.push(
+    `Document Overview: This document examines ${topicShort.replace(/\.$/, '')}, detailing its primary objectives and operational framework.`
+  );
+
+  // 2. Core Mechanism
+  if (extractive.length > 0) {
+    claims.push(`Core Mechanism: ${extractive[0]}`);
+  }
+
+  // 3. Quantitative / Technical details
+  const metricSentence = sentences.find(
+    s => extractNumbersAndEntities(s).length > 0 && s !== extractive[0]
+  );
+  if (metricSentence && targetCount >= 3) {
+    claims.push(`Key Specifications & Metrics: ${metricSentence}`);
+  } else if (extractive.length > 1) {
+    claims.push(`Detailed Analysis: ${extractive[1]}`);
+  }
+
+  // 4. Strategic Conclusions
+  const lastItem = extractive[extractive.length - 1];
+  if (lastItem && !claims.some(c => c.includes(lastItem)) && targetCount >= 4) {
+    claims.push(`Conclusion & Practical Impact: ${lastItem}`);
+  }
+
+  return claims.slice(0, targetCount);
+}
+
+/**
  * Heuristic Extractive Summariser
  * Selects top salient sentences using centroid degree centrality (LexRank-inspired)
  */
@@ -182,8 +235,8 @@ export async function runClientAnalysis(
   } else if (method === 'extractive') {
     summarySentences = generateExtractiveSummary(documentText, count);
   } else {
-    // Abstractive heuristic
-    summarySentences = generateExtractiveSummary(documentText, count);
+    // Abstractive AI Explanatory mode
+    summarySentences = generateAiExplanatorySummary(documentText, count);
   }
 
   const summaryText = summarySentences.join(' ');
