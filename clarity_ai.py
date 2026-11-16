@@ -62,8 +62,14 @@ def split_into_sentences(text: str) -> List[str]:
     for s in raw_sentences:
         s_clean = s.strip()
         # Filter out headers, URLs, and tiny fragments
-        if len(s_clean) > 20 and not s_clean.startswith(("http://", "https://", "Page ")):
+        if len(s_clean) > 15 and not s_clean.startswith(("http://", "https://", "Page ")):
             cleaned.append(s_clean)
+
+    if len(cleaned) < 2:
+        line_splits = [l.strip() for l in text.split("\n") if len(l.strip()) > 15]
+        if len(line_splits) > len(cleaned):
+            cleaned = line_splits
+
     return cleaned
 
 def get_tokens(text: str) -> List[str]:

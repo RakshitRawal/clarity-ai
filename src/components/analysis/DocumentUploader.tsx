@@ -11,9 +11,11 @@ import {
   CheckCircle,
   FileCode,
   BookOpen,
+  Loader2,
 } from 'lucide-react';
 import { SummarisationMethod } from '../../types';
 import { SAMPLE_DOCUMENTS } from '../../data/sampleDocuments';
+import { extractDocumentText } from '../../services/textExtractor';
 
 interface DocumentUploaderProps {
   onStartAnalysis: (params: {
@@ -46,6 +48,7 @@ export const DocumentUploader: React.FC<DocumentUploaderProps> = ({ onStartAnaly
   const [targetLength, setTargetLength] = useState<'short' | 'medium' | 'long'>('medium');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [dragActive, setDragActive] = useState(false);
+  const [isExtracting, setIsExtracting] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -59,7 +62,7 @@ export const DocumentUploader: React.FC<DocumentUploaderProps> = ({ onStartAnaly
     }
   };
 
-  const validateAndSetFile = (file: File) => {
+  const validateAndSetFile = async (file: File) => {
     setErrorMessage(null);
     const validExtensions = ['.pdf', '.docx', '.txt'];
     const ext = '.' + file.name.split('.').pop()?.toLowerCase();
@@ -89,27 +92,26 @@ export const DocumentUploader: React.FC<DocumentUploaderProps> = ({ onStartAnaly
       setDocumentTitle(file.name.replace(/\.[^/.]+$/, ''));
     }
 
-    // Read content if txt
-    if (fileType === 'txt') {
-      const reader = new FileReader();
-      reader.onload = e => {
-        const text = e.target?.result as string;
-        setPastedText(text);
-      };
-      reader.readAsText(file);
-    } else {
-      // For PDF/DOCX in demo, we extract text content cleanly
-      const reader = new FileReader();
-      reader.onload = e => {
-        const text = (e.target?.result as string) || '';
-        // If binary or contains null bytes, use high quality sample document text without ugly filename prefix
-        if (text && text.length > 50 && !text.includes('\u0000')) {
-          setPastedText(text);
-        } else {
-          setPastedText(SAMPLE_DOCUMENTS[0].originalText);
-        }
-      };
-      reader.readAsText(file.slice(0, 50000));
+    // Extract genuine text from the uploaded file
+    setIsExtracting(true);
+    try {
+      const extracted = await extractDocumentText(file);
+      if (extracted.text && extracted.wordCount >= 10) {
+        setPastedText(extracted.text);
+      } else {
+        setErrorMessage(
+          `Could not extract sufficient text from "${file.name}". The document might be scanned images or password-protected. Please paste your text in the "Paste Text" tab.`
+        );
+        setPastedText('');
+      }
+    } catch (err: any) {
+      console.error('File extraction error:', err);
+      setErrorMessage(
+        `Failed to parse "${file.name}". You can switch to the "Paste Text" tab and paste your content directly.`
+      );
+      setPastedText('');
+    } finally {
+      setIsExtracting(false);
     }
   };
 
@@ -258,41 +260,73 @@ export const DocumentUploader: React.FC<DocumentUploaderProps> = ({ onStartAnaly
               </button>
             </div>
           ) : (
-            <div className="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-charcoal-900 flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-lg bg-brand-50 dark:bg-brand-950 flex items-center justify-center text-brand-600 dark:text-brand-400">
-                  <File className="w-5 h-5" />
+            <div className="space-y-3">
+              <div className="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-charcoal-900 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-lg bg-brand-50 dark:bg-brand-950 flex items-center justify-center text-brand-600 dark:text-brand-400">
+                    <File className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-slate-900 dark:text-white truncate max-w-sm">
+                      {selectedFile.name}
+                    </p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">
+                      {selectedFile.type.toUpperCase()} • {selectedFile.size} • {wordCount} words extracted
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-sm font-semibold text-slate-900 dark:text-white truncate max-w-sm">
-                    {selectedFile.name}
-                  </p>
-                  <p className="text-xs text-slate-500 dark:text-slate-400">
-                    {selectedFile.type.toUpperCase()} • {selectedFile.size} • {wordCount} words extracted
-                  </p>
+
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="px-3 py-1.5 text-xs font-medium text-brand-600 dark:text-brand-400 hover:underline"
+                  >
+                    Replace
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSelectedFile(null);
+                      setPastedText('');
+                    }}
+                    className="p-1.5 text-slate-400 hover:text-rose-500 rounded-lg transition-colors"
+                    aria-label="Remove uploaded file"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
                 </div>
               </div>
 
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => fileInputRef.current?.click()}
-                  className="px-3 py-1.5 text-xs font-medium text-brand-600 dark:text-brand-400 hover:underline"
-                >
-                  Replace
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setSelectedFile(null);
-                    setPastedText('');
-                  }}
-                  className="p-1.5 text-slate-400 hover:text-rose-500 rounded-lg transition-colors"
-                  aria-label="Remove uploaded file"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
+              {/* Extraction Progress */}
+              {isExtracting && (
+                <div className="p-4 rounded-xl border border-brand-200 dark:border-brand-900 bg-brand-50/50 dark:bg-brand-950/30 flex items-center gap-3 text-brand-700 dark:text-brand-300 text-xs animate-pulse">
+                  <Loader2 className="w-4 h-4 animate-spin text-brand-600" />
+                  <span>Extracting document text from {selectedFile.name}...</span>
+                </div>
+              )}
+
+              {/* Live Extracted Content Review */}
+              {!isExtracting && pastedText && (
+                <div className="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/60 dark:bg-charcoal-900/60 space-y-2">
+                  <div className="flex items-center justify-between text-xs font-semibold text-slate-700 dark:text-slate-300">
+                    <span className="flex items-center gap-1.5">
+                      <FileText className="w-3.5 h-3.5 text-brand-500" />
+                      Extracted Document Text ({wordCount} words)
+                    </span>
+                    <span className="text-[11px] text-slate-400">
+                      Genuine file content extracted for verification
+                    </span>
+                  </div>
+                  <textarea
+                    rows={5}
+                    value={pastedText}
+                    onChange={e => setPastedText(e.target.value)}
+                    placeholder="Extracted document text..."
+                    className="w-full p-3 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-charcoal-950 text-slate-900 dark:text-slate-100 text-xs font-mono leading-relaxed focus:outline-none focus:ring-1 focus:ring-brand-500 transition-colors"
+                  />
+                </div>
+              )}
             </div>
           )}
         </div>

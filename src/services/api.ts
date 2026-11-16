@@ -30,8 +30,18 @@ export interface HealthCheckResponse {
   activeProvider: string;
 }
 
+const getInitialBackendUrl = (): string => {
+  if (typeof window !== 'undefined') {
+    // If hosted on Render, Vercel, or any remote host, use the current origin
+    if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+      return window.location.origin;
+    }
+  }
+  return 'http://localhost:8000';
+};
+
 const DEFAULT_CONFIG: ApiConfig = {
-  backendUrl: 'http://localhost:8000',
+  backendUrl: getInitialBackendUrl(),
   apiKey: '',
   isLiveBackend: true, // Default to live Python backend
   selectedModel: 'mistral-7b-instruct-q4',
@@ -47,6 +57,15 @@ export class ClarityApiService {
     if (saved) {
       try {
         this.config = { ...DEFAULT_CONFIG, ...JSON.parse(saved) };
+        // If loaded config has localhost:8000 but we are on a remote host (like Render), fix it!
+        if (
+          typeof window !== 'undefined' &&
+          window.location.hostname !== 'localhost' &&
+          window.location.hostname !== '127.0.0.1' &&
+          (this.config.backendUrl.includes('localhost') || this.config.backendUrl.includes('127.0.0.1'))
+        ) {
+          this.config.backendUrl = window.location.origin;
+        }
       } catch {
         this.config = { ...DEFAULT_CONFIG };
       }

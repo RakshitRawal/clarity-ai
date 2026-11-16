@@ -1,0 +1,75 @@
+{
+  "id": "analysis-1794811690",
+  "method": "abstractive",
+  "summaryText": "DEPARTMENT FOR ENERGY SECURITY AND NET ZERO WHITE PAPER: ACCELERATING THE CLEAN POWER 2030 TRANSITION Section 1: Strategic Vision and Primary Objectives\nThe United Kingdom has committed to achieving a clean electricity system by 2030, reducing dependency on volatile international gas markets and lowering domestic consumer bills over the decade. To achieve this, the National Energy System Operator (NESO) has modeled a delivery pathway requiring an unprecedented expansion of offshore wind, solar generation, and transmission infrastructure. Section 2: Capital Allocation and Financing Infrastructure\nThe Secretary of State announces an allocated public capital commitment of \u00a328 billion over five years to de-risk high-voltage direct current (HVDC) subsea links and strategic distribution upgrades.",
+  "wordCount": 111,
+  "originalWordCount": 265,
+  "compressionRatio": 0.419,
+  "processingTimeMs": 15,
+  "claims": [
+    {
+      "claimText": "DEPARTMENT FOR ENERGY SECURITY AND NET ZERO WHITE PAPER: ACCELERATING THE CLEAN POWER 2030 TRANSITION",
+      "status": "supported",
+      "confidenceScore": 0.99,
+      "supportingPassage": "DEPARTMENT FOR ENERGY SECURITY AND NET ZERO WHITE PAPER: ACCELERATING THE CLEAN POWER 2030 TRANSITION",
+      "conflictingPassage": null,
+      "sourceLocation": {
+        "paragraph": 1,
+        "section": "Overview / Introduction"
+      },
+      "explanation": "High semantic and entity concordance with identified source context.",
+      "id": "claim-1"
+    },
+    {
+      "claimText": "Section 1: Strategic Vision and Primary Objectives\nThe United Kingdom has committed to achieving a clean electricity system by 2030, reducing dependency on volatile international gas markets and lowering domestic consumer bills over the decade.",
+      "status": "supported",
+      "confidenceScore": 0.99,
+      "supportingPassage": "Section 1: Strategic Vision and Primary Objectives\nThe United Kingdom has committed to achieving a clean electricity system by 2030, reducing dependency on volatile international gas markets and lowering domestic consumer bills over the decade.",
+      "conflictingPassage": null,
+      "sourceLocation": {
+        "paragraph": 2,
+        "section": "Overview / Introduction"
+      },
+      "explanation": "High semantic and entity concordance with identified source context.",
+      "id": "claim-2"
+    },
+    {
+      "claimText": "To achieve this, the National Energy System Operator (NESO) has modeled a delivery pathway requiring an unprecedented expansion of offshore wind, solar generation, and transmission infrastructure.",
+      "status": "supported",
+      "confidenceScore": 0.99,
+      "supportingPassage": "To achieve this, the National Energy System Operator (NESO) has modeled a delivery pathway requiring an unprecedented expansion of offshore wind, solar generation, and transmission infrastructure.",
+      "conflictingPassage": null,
+      "sourceLocation": {
+        "paragraph": 3,
+        "section": "Section 2"
+      },
+      "explanation": "High semantic and entity concordance with identified source context.",
+      "id": "claim-3"
+    },
+    {
+      "claimText": "Section 2: Capital Allocation and Financing Infrastructure\nThe Secretary of State announces an allocated public capital commitment of \u00a328 billion over five years to de-risk high-voltage direct current (HVDC) subsea links and strategic distribution upgrades.",
+      "status": "supported",
+      "confidenceScore": 0.99,
+      "supportingPassage": "Section 2: Capital Allocation and Financing Infrastructure\nThe Secretary of State announces an allocated public capital commitment of \u00a328 billion over five years to de-risk high-voltage direct current (HVDC) subsea links and strategic distribution upgrades.",
+      "conflictingPassage": null,
+      "sourceLocation": {
+        "paragraph": 4,
+        "section": "Section 2"
+      },
+      "explanation": "High semantic and entity concordance with identified source context.",
+      "id": "claim-4"
+    }
+  ],
+  "metrics": {
+    "factualConsistency": {
+      "consistencyRate": 100.0,
+      "totalClaims": 4,
+      "supportedClaims": 4,
+      "contradictedClaims": 0,
+      "unverifiedClaims": 0,
+      "potentialHallucinations": 0
+    },
+    "hasReferenceSummary": false,
+    "rouge": null
+  }
+}
