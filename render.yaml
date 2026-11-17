@@ -2,7 +2,7 @@
 services:
   # Unified Web Service (Serves both the React Frontend & Python NLP Engine)
   - type: web
-    name: clarity-ai
+    name: clarityai-platform
     env: docker
     region: oregon
     plan: free
