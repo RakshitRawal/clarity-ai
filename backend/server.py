@@ -52,6 +52,11 @@ class ClarityAPIHandler(BaseHTTPRequestHandler):
         self.send_cors_headers()
         self.end_headers()
 
+    def do_HEAD(self):
+        self.send_response(200)
+        self.send_cors_headers()
+        self.end_headers()
+
     def send_json(self, status_code: int, data: Any):
         payload = json.dumps(data, indent=2).encode("utf-8")
         self.send_response(status_code)
