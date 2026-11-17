@@ -84,14 +84,25 @@ class ClarityAPIHandler(BaseHTTPRequestHandler):
             self.send_error_json(404, "Frontend build not found. Run 'npm run build' first.")
             return
 
-        clean_path = path.lstrip("/")
-        if not clean_path or clean_path == "index.html":
+        # Strip query string and fragments
+        clean_path = path.split("?")[0].split("#")[0].lstrip("/")
+
+        # Robust asset handling: if path contains 'assets/', map directly to dist/assets/
+        if "assets/" in clean_path:
+            asset_filename = clean_path.split("assets/")[-1]
+            file_path = os.path.join(DIST_DIR, "assets", asset_filename)
+        elif not clean_path or clean_path == "index.html":
             file_path = os.path.join(DIST_DIR, "index.html")
         else:
             file_path = os.path.join(DIST_DIR, clean_path)
 
         # Fallback to index.html for SPA routes (e.g. /app/overview, /app/new)
+        # Never fallback for static asset requests with file extensions (.js, .css, .png, etc.)
         if not os.path.exists(file_path) or os.path.isdir(file_path):
+            basename = os.path.basename(file_path)
+            if "." in basename and not basename.endswith(".html"):
+                self.send_error_json(404, f"Asset '{clean_path}' not found.")
+                return
             file_path = os.path.join(DIST_DIR, "index.html")
 
         if not os.path.exists(file_path):
