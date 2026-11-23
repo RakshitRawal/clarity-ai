@@ -23,11 +23,12 @@ export const AnalysisProgress: React.FC<AnalysisProgressProps> = ({
   const percent = Math.min(100, Math.max(10, currentStage * 20));
 
   return (
-    <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-charcoal-900 p-6 sm:p-8 shadow-xl max-w-2xl mx-auto space-y-6 animate-fade-in">
+    <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-charcoal-900 p-6 sm:p-8 shadow-xl max-w-2xl mx-auto space-y-6">
+      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
-            <Loader2 className="w-5 h-5 text-brand-600 dark:text-brand-400 animate-spin" />
+          <h3 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2.5">
+            <Loader2 className="w-5 h-5 text-brand-600 dark:text-brand-400 animate-spin flex-shrink-0" />
             <span>Analyzing Document</span>
           </h3>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
@@ -38,7 +39,7 @@ export const AnalysisProgress: React.FC<AnalysisProgressProps> = ({
         <button
           type="button"
           onClick={onCancel}
-          className="px-3 py-1.5 text-xs font-semibold text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-lg transition-colors flex items-center gap-1.5 border border-rose-200 dark:border-rose-900/60"
+          className="px-3 py-1.5 text-xs font-semibold text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-lg transition-colors flex items-center gap-1.5 border border-rose-200 dark:border-rose-900/60 focus:outline-none"
         >
           <XCircle className="w-3.5 h-3.5" />
           <span>Cancel</span>
@@ -49,18 +50,18 @@ export const AnalysisProgress: React.FC<AnalysisProgressProps> = ({
       <div>
         <div className="flex justify-between items-center text-xs font-medium text-slate-600 dark:text-slate-400 mb-2">
           <span>Stage {currentStage} of 5</span>
-          <span className="font-mono text-brand-600 dark:text-brand-400">{percent}% Complete</span>
+          <span className="font-mono text-brand-600 dark:text-brand-400 font-semibold">{percent}% Complete</span>
         </div>
         <div className="w-full h-2.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
           <div
-            className="h-full bg-gradient-to-r from-brand-600 to-brand-500 transition-all duration-500 ease-out"
+            className="h-full bg-gradient-to-r from-brand-600 to-brand-500 transition-[width] duration-400 ease-out"
             style={{ width: `${percent}%` }}
           />
         </div>
       </div>
 
-      {/* Pipeline Steps List */}
-      <div className="space-y-3.5 pt-2">
+      {/* Pipeline Steps List — Fixed dimensions with zero layout shift / glitching */}
+      <div className="space-y-2 pt-1">
         {STAGES.map(s => {
           const isDone = currentStage > s.step;
           const isCurrent = currentStage === s.step;
@@ -68,25 +69,26 @@ export const AnalysisProgress: React.FC<AnalysisProgressProps> = ({
           return (
             <div
               key={s.step}
-              className={`flex items-start gap-3 p-3 rounded-xl transition-all ${
+              className={`flex items-start gap-3 p-3.5 rounded-xl border transition-colors duration-250 box-border ${
                 isCurrent
-                  ? 'bg-brand-50/60 dark:bg-brand-950/40 border border-brand-200 dark:border-brand-900/60'
-                  : 'bg-transparent'
+                  ? 'bg-brand-50/70 dark:bg-brand-950/40 border-brand-300/80 dark:border-brand-800 shadow-sm'
+                  : 'bg-transparent border-transparent'
               }`}
             >
-              <div className="mt-0.5 flex-shrink-0">
+              <div className="w-5 h-5 flex items-center justify-center flex-shrink-0 mt-0.5">
                 {isDone ? (
                   <CheckCircle2 className="w-5 h-5 text-emerald-500" />
                 ) : isCurrent ? (
                   <Loader2 className="w-5 h-5 text-brand-600 dark:text-brand-400 animate-spin" />
                 ) : (
-                  <Circle className="w-5 h-5 text-slate-300 dark:text-slate-700" />
+                  <Circle className="w-4 h-4 text-slate-300 dark:text-slate-700" />
                 )}
               </div>
+
               <div className="flex-1 min-w-0">
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between gap-2 h-5">
                   <p
-                    className={`text-xs font-bold ${
+                    className={`text-xs font-bold leading-none ${
                       isCurrent
                         ? 'text-brand-900 dark:text-brand-200'
                         : isDone
@@ -96,14 +98,20 @@ export const AnalysisProgress: React.FC<AnalysisProgressProps> = ({
                   >
                     {s.step}. {s.title}
                   </p>
-                  {isCurrent && (
-                    <span className="text-[10px] font-mono text-brand-600 dark:text-brand-400 uppercase tracking-wider font-semibold">
-                      In Progress
-                    </span>
-                  )}
+
+                  <span
+                    className={`text-[10px] font-mono font-semibold uppercase tracking-wider transition-opacity duration-200 ${
+                      isCurrent
+                        ? 'opacity-100 text-brand-600 dark:text-brand-400'
+                        : 'opacity-0 select-none pointer-events-none'
+                    }`}
+                  >
+                    In Progress
+                  </span>
                 </div>
+
                 <p
-                  className={`text-[11px] mt-0.5 ${
+                  className={`text-[11px] mt-1 leading-snug ${
                     isCurrent
                       ? 'text-brand-700/80 dark:text-brand-300/80'
                       : isDone

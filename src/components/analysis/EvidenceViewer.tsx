@@ -20,15 +20,23 @@ export const EvidenceViewer: React.FC<EvidenceViewerProps> = ({
 
   const targetQuote = selectedClaim?.supportingPassage || selectedClaim?.conflictingPassage || '';
 
-  // Auto-scroll to highlighted evidence whenever selected claim changes
+  // Auto-scroll to highlighted evidence within the local container only (never jumps the window)
   useEffect(() => {
-    if (highlightRef.current) {
-      highlightRef.current.scrollIntoView({
+    if (highlightRef.current && containerRef.current) {
+      const container = containerRef.current;
+      const highlight = highlightRef.current;
+      const containerRect = container.getBoundingClientRect();
+      const highlightRect = highlight.getBoundingClientRect();
+      
+      const relativeTop = highlightRect.top - containerRect.top + container.scrollTop;
+      const targetScroll = relativeTop - container.clientHeight / 2 + highlightRect.height / 2;
+
+      container.scrollTo({
+        top: Math.max(0, targetScroll),
         behavior: 'smooth',
-        block: 'center',
       });
     }
-  }, [selectedClaim, targetQuote]);
+  }, [selectedClaim?.id, targetQuote]);
 
   const handleCopy = () => {
     navigator.clipboard.writeText(originalText);
