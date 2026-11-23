@@ -18,7 +18,7 @@ export const FactualConsistencyOverview: React.FC<FactualConsistencyOverviewProp
     <div className="space-y-3">
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="text-sm font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
+          <h3 className="text-xs sm:text-sm font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
             Factual Consistency & Audit Metrics
           </h3>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
@@ -33,10 +33,11 @@ export const FactualConsistencyOverview: React.FC<FactualConsistencyOverviewProp
           title="Factual Consistency"
           value={`${metrics.consistencyRate}%`}
           status={getRateStatus(metrics.consistencyRate)}
-          icon={<ShieldCheck className="w-4 h-4" />}
+          icon={<ShieldCheck className="w-4 h-4 text-emerald-500" />}
           definition="Proportion of extracted summary claims with verified semantic and entity agreement in the original document."
           calculation="(Supported Claims / Total Claims) × 100"
           badge={metrics.consistencyRate >= 80 ? 'High Fidelity' : 'Critical Discrepancies'}
+          tooltipAlign="left"
         />
 
         {/* Metric 2: Total Claims */}
@@ -44,9 +45,10 @@ export const FactualConsistencyOverview: React.FC<FactualConsistencyOverviewProp
           title="Total Claims"
           value={metrics.totalClaims}
           status="default"
-          icon={<Sparkles className="w-4 h-4" />}
+          icon={<Sparkles className="w-4 h-4 text-brand-500" />}
           definition="Discrete atomic factual assertions decomposed from the generated summary."
           calculation="Atomic proposition segmentation"
+          tooltipAlign="left"
         />
 
         {/* Metric 3: Supported Claims */}
@@ -56,7 +58,8 @@ export const FactualConsistencyOverview: React.FC<FactualConsistencyOverviewProp
           status="success"
           icon={<CheckCircle2 className="w-4 h-4 text-emerald-500" />}
           definition="Claims where numbers, dates, entities, and statements directly correspond to source text passages."
-          calculation="Cosine & token entailment ≥ threshold"
+          calculation="Cosine & token entailment ≥ 0.65 threshold"
+          tooltipAlign="left"
         />
 
         {/* Metric 4: Contradicted Claims */}
@@ -66,7 +69,8 @@ export const FactualConsistencyOverview: React.FC<FactualConsistencyOverviewProp
           status="danger"
           icon={<AlertOctagon className="w-4 h-4 text-rose-500" />}
           definition="Claims that directly conflict with the source document through altered figures, inverted negation, or substituted entities."
-          calculation="Direct polarity or numerical mismatch"
+          calculation="Direct polarity or numerical mismatch with source context"
+          tooltipAlign="right"
         />
 
         {/* Metric 5: Unverified Claims */}
@@ -76,7 +80,8 @@ export const FactualConsistencyOverview: React.FC<FactualConsistencyOverviewProp
           status="warning"
           icon={<AlertTriangle className="w-4 h-4 text-amber-500" />}
           definition="Claims with inconclusive source overlap. Important: Unverified claims are flagged for human review, not pre-judged as hallucinations."
-          calculation="Ambiguous semantic context or partial match"
+          calculation="Ambiguous semantic context or partial match (< 0.65 similarity)"
+          tooltipAlign="right"
         />
 
         {/* Metric 6: Potential Hallucinations */}
@@ -87,6 +92,7 @@ export const FactualConsistencyOverview: React.FC<FactualConsistencyOverviewProp
           icon={<AlertCircle className="w-4 h-4 text-rose-500" />}
           definition="Total high-risk statements exhibiting fabricated data, phantom entities, or ungrounded conclusions."
           calculation="Contradicted + Unverified High-Risk Claims"
+          tooltipAlign="right"
         />
       </div>
 

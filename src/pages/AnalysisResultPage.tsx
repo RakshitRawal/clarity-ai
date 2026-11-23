@@ -55,6 +55,13 @@ export const AnalysisResultPage: React.FC = () => {
     }
   }, [id, targetDoc]);
 
+  // Auto-generate summary for active method if not yet generated
+  useEffect(() => {
+    if (targetDoc && !targetDoc.summaries[targetDoc.activeMethod]) {
+      setActiveMethod(targetDoc.activeMethod);
+    }
+  }, [targetDoc?.id, targetDoc?.activeMethod]);
+
   if (!targetDoc) {
     return (
       <EmptyState
@@ -68,7 +75,7 @@ export const AnalysisResultPage: React.FC = () => {
 
   const currentSummary = targetDoc.summaries[targetDoc.activeMethod];
 
-  // If summary not generated for this method yet, fallback or show state
+  // If summary generating or not ready yet, show sleek loading indicator
   if (!currentSummary) {
     return (
       <div className="space-y-6">
@@ -81,12 +88,15 @@ export const AnalysisResultPage: React.FC = () => {
           <span>Back to Documents</span>
         </button>
 
-        <EmptyState
-          title={`No ${targetDoc.activeMethod.toUpperCase()} summary generated`}
-          description={`A summary using the ${targetDoc.activeMethod} method has not been generated for "${targetDoc.title}". You can switch methods or run a new analysis.`}
-          actionText="Run New Analysis"
-          actionLink="/app/new"
-        />
+        <div className="p-12 text-center rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-charcoal-900 shadow-sm space-y-3">
+          <div className="w-10 h-10 mx-auto rounded-full border-2 border-brand-600 border-t-transparent animate-spin" />
+          <h3 className="text-base font-bold text-slate-900 dark:text-white">
+            Generating {targetDoc.activeMethod.toUpperCase()} Factual Summary...
+          </h3>
+          <p className="text-xs text-slate-500 dark:text-slate-400 max-w-sm mx-auto">
+            Extracting semantic sentences and calculating factual consistency against the source document.
+          </p>
+        </div>
       </div>
     );
   }

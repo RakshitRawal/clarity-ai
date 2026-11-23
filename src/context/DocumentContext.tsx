@@ -118,19 +118,48 @@ export const DocumentProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     setSelectedClaimId(null);
   };
 
-  const setActiveMethod = (method: SummarisationMethod) => {
+  const setActiveMethod = async (method: SummarisationMethod) => {
     setActiveMethodState(method);
     if (activeDocument) {
-      // Check if we need to run or generate for this method
-      const currentSummary = activeDocument.summaries[method];
-      if (currentSummary && currentSummary.claims.length > 0) {
-        setSelectedClaimId(currentSummary.claims[0].id);
+      const existingSummary = activeDocument.summaries[method];
+      if (existingSummary && existingSummary.claims.length > 0) {
+        setSelectedClaimId(existingSummary.claims[0].id);
+        setDocuments(prev =>
+          prev.map(doc => (doc.id === activeDocument.id ? { ...doc, activeMethod: method } : doc))
+        );
       } else {
-        setSelectedClaimId(null);
+        // Auto-generate on-demand so every method button always works!
+        try {
+          const generated = await runClientAnalysis(
+            activeDocument.originalText,
+            method,
+            'medium',
+            activeDocument.referenceSummary
+          );
+          setDocuments(prev =>
+            prev.map(doc =>
+              doc.id === activeDocument.id
+                ? {
+                    ...doc,
+                    activeMethod: method,
+                    summaries: {
+                      ...doc.summaries,
+                      [method]: generated,
+                    },
+                  }
+                : doc
+            )
+          );
+          if (generated.claims.length > 0) {
+            setSelectedClaimId(generated.claims[0].id);
+          }
+        } catch (err) {
+          console.error('Failed to auto-generate summary for method', method, err);
+          setDocuments(prev =>
+            prev.map(doc => (doc.id === activeDocument.id ? { ...doc, activeMethod: method } : doc))
+          );
+        }
       }
-      setDocuments(prev =>
-        prev.map(doc => (doc.id === activeDocument.id ? { ...doc, activeMethod: method } : doc))
-      );
     }
   };
 
