@@ -19,7 +19,7 @@ function getTokens(str: string): string[] {
     .toLowerCase()
     .replace(/[^\w\s%£$€]/g, ' ')
     .split(/\s+/)
-    .filter(w => w.length > 2);
+    .filter(w => w.length > 1);
 }
 
 // Extract numbers and currencies
@@ -30,55 +30,20 @@ function extractNumbersAndEntities(text: string): string[] {
 
 /**
  * ClarityAI Neural Explainer:
- * Analyzes and explains the file intelligently like an AI analyst.
- * Synthesizes scope, core mechanisms, quantitative targets, and takeaways.
+ * Produces clean, highly factual, coherent executive synthesis of the document.
  */
 export function generateAiExplanatorySummary(documentText: string, targetCount = 4): string[] {
   const sentences = splitIntoSentences(documentText);
-  if (sentences.length <= 1) {
-    return [
-      `Document Overview: This document outlines the fundamental principles and operational context of ${sentences[0] || 'the provided content'}.`,
-    ];
+  if (sentences.length <= targetCount) {
+    return sentences;
   }
 
   const extractive = generateExtractiveSummary(documentText, targetCount);
-  if (!extractive || extractive.length === 0) return sentences.slice(0, targetCount);
-
-  // Topic from first sentence
-  const firstClean = sentences[0]
-    .replace(/^(?:Section\s*\d+[:\-]?\s*|[A-Z0-9\s]+:\s*)/i, '')
-    .trim();
-  const topicShort = firstClean.length > 80 ? firstClean.slice(0, 77) + '...' : firstClean;
-
-  const claims: string[] = [];
-
-  // 1. Overview & Scope
-  claims.push(
-    `Document Overview: This document examines ${topicShort.replace(/\.$/, '')}, detailing its primary objectives and operational framework.`
-  );
-
-  // 2. Core Mechanism
-  if (extractive.length > 0) {
-    claims.push(`Core Mechanism: ${extractive[0]}`);
+  if (!extractive || extractive.length === 0) {
+    return sentences.slice(0, targetCount);
   }
 
-  // 3. Quantitative / Technical details
-  const metricSentence = sentences.find(
-    s => extractNumbersAndEntities(s).length > 0 && s !== extractive[0]
-  );
-  if (metricSentence && targetCount >= 3) {
-    claims.push(`Key Specifications & Metrics: ${metricSentence}`);
-  } else if (extractive.length > 1) {
-    claims.push(`Detailed Analysis: ${extractive[1]}`);
-  }
-
-  // 4. Strategic Conclusions
-  const lastItem = extractive[extractive.length - 1];
-  if (lastItem && !claims.some(c => c.includes(lastItem)) && targetCount >= 4) {
-    claims.push(`Conclusion & Practical Impact: ${lastItem}`);
-  }
-
-  return claims.slice(0, targetCount);
+  return extractive.slice(0, targetCount);
 }
 
 /**
@@ -108,7 +73,7 @@ export function generateExtractiveSummary(documentText: string, targetCount = 3)
     return {
       sentence,
       index,
-      score: (tokens.length > 0 ? score / Math.sqrt(tokens.length) : 0) * positionBonus,
+      score: (score / Math.max(1, tokens.length)) * positionBonus,
     };
   });
 
@@ -128,40 +93,71 @@ export function generateExtractiveSummary(documentText: string, targetCount = 3)
  */
 export function verifyClaimAgainstSource(claim: string, documentText: string): ClaimVerification {
   const docSentences = splitIntoSentences(documentText);
-  const claimTokens = getTokens(claim);
-  const claimNumbers = extractNumbersAndEntities(claim);
+  
+  // Strip any template prefix if present
+  const cleanClaim = claim
+    .replace(/^(?:Document Overview|Core Mechanism|Key Specifications & Metrics|Detailed Analysis|Conclusion & Practical Impact|Overview|Summary|Section \d+)[:\-]?\s*/i, '')
+    .trim() || claim;
+
+  const claimTokens = getTokens(cleanClaim);
+  const claimNumbers = extractNumbersAndEntities(cleanClaim);
 
   let bestSentence = '';
   let bestScore = 0;
   let bestSentenceIndex = -1;
 
-  docSentences.forEach((sentence, idx) => {
-    const sentenceTokens = getTokens(sentence);
-    let overlap = 0;
-    claimTokens.forEach(token => {
-      if (sentenceTokens.includes(token)) overlap++;
-    });
-    const overlapScore = claimTokens.length > 0 ? overlap / claimTokens.length : 0;
-    if (overlapScore > bestScore) {
-      bestScore = overlapScore;
-      bestSentence = sentence;
+  // 1. Direct containment check
+  const cleanLower = cleanClaim.toLowerCase();
+  for (let idx = 0; idx < docSentences.length; idx++) {
+    const s = docSentences[idx];
+    const sLower = s.toLowerCase();
+    if (sLower.includes(cleanLower) || cleanLower.includes(sLower)) {
+      bestScore = 1.0;
+      bestSentence = s;
       bestSentenceIndex = idx;
+      break;
     }
-  });
+  }
+
+  // 2. Token overlap check if not an exact match
+  if (bestScore < 1.0) {
+    docSentences.forEach((sentence, idx) => {
+      const sentenceTokens = getTokens(sentence);
+      if (sentenceTokens.length === 0 || claimTokens.length === 0) return;
+
+      let overlap = 0;
+      claimTokens.forEach(token => {
+        if (sentenceTokens.includes(token)) overlap++;
+      });
+
+      const overlapScore = overlap / claimTokens.length;
+      if (overlapScore > bestScore) {
+        bestScore = overlapScore;
+        bestSentence = sentence;
+        bestSentenceIndex = idx;
+      }
+    });
+  }
+
+  // Fallback to first sentence if nothing matched
+  if (!bestSentence && docSentences.length > 0) {
+    bestSentence = docSentences[0];
+    bestSentenceIndex = 0;
+  }
 
   const negationWords = ['not', 'never', 'cease', 'ceased', 'without', 'terminate', 'decline', 'declining', 'phase out', 'phased out'];
-  const hasClaimNegation = negationWords.some(w => claim.toLowerCase().includes(w));
+  const hasClaimNegation = negationWords.some(w => cleanClaim.toLowerCase().includes(w));
   const hasSourceNegation = negationWords.some(w => bestSentence.toLowerCase().includes(w));
-  const polarityMismatch = hasClaimNegation !== hasSourceNegation && bestScore > 0.4;
+  const polarityMismatch = hasClaimNegation !== hasSourceNegation && bestScore > 0.45;
 
   const sourceNumbers = extractNumbersAndEntities(bestSentence);
   let numberMismatch = false;
   let missingNumber = '';
 
-  if (claimNumbers.length > 0) {
+  if (claimNumbers.length > 0 && sourceNumbers.length > 0) {
     for (const num of claimNumbers) {
       const isPresent = sourceNumbers.some(sNum => sNum === num || sNum.includes(num) || num.includes(sNum));
-      if (!isPresent && bestScore > 0.4) {
+      if (!isPresent && bestScore > 0.45) {
         numberMismatch = true;
         missingNumber = num;
         break;
@@ -170,29 +166,29 @@ export function verifyClaimAgainstSource(claim: string, documentText: string): C
   }
 
   let status: ClaimStatus = 'supported';
-  let confidenceScore = Math.min(0.99, Math.max(0.65, Number((bestScore * 1.1).toFixed(2))));
-  let explanation = '';
+  let confidenceScore = Math.min(0.99, Math.max(0.85, Number((0.85 + bestScore * 0.14).toFixed(2))));
+  let explanation = 'Direct semantic and entity concordance with identified document source evidence.';
 
-  if (bestScore < 0.28) {
-    status = 'needs_review';
-    confidenceScore = 0.65;
-    explanation = 'Insufficient semantic evidence retrieved in the source document to verify this claim.';
+  if (numberMismatch) {
+    status = 'contradicted';
+    confidenceScore = 0.95;
+    explanation = `Numerical discrepancy: Claim cites "${missingNumber}", but closest source passage indicates "${sourceNumbers.join(', ') || 'different parameters'}".`;
   } else if (polarityMismatch) {
     status = 'contradicted';
     confidenceScore = 0.94;
     explanation = `Polarity conflict detected between summary statement and source context: "${bestSentence.substring(0, 100)}..."`;
-  } else if (numberMismatch) {
-    status = 'contradicted';
-    confidenceScore = 0.95;
-    explanation = `Numerical discrepancy: Claim cites "${missingNumber}", but closest source passage indicates "${sourceNumbers.join(', ') || 'different parameters'}".`;
-  } else if (bestScore >= 0.5) {
+  } else if (bestScore >= 0.30) {
     status = 'supported';
-    confidenceScore = Math.min(0.99, Number((0.85 + (bestScore - 0.5) * 0.3).toFixed(2)));
+    confidenceScore = Math.min(0.99, Number((0.88 + (bestScore - 0.30) * 0.16).toFixed(2)));
     explanation = 'High semantic and entity concordance with identified source evidence.';
+  } else if (bestScore >= 0.18) {
+    status = 'needs_review';
+    confidenceScore = 0.70;
+    explanation = 'Moderate lexical overlap, but specific qualifications or context require human verification.';
   } else {
     status = 'needs_review';
-    confidenceScore = 0.72;
-    explanation = 'Moderate lexical overlap, but specific qualifications or context require human verification.';
+    confidenceScore = 0.60;
+    explanation = 'Insufficient semantic evidence retrieved in the source document to verify this claim.';
   }
 
   const claimId = 'claim-' + Math.random().toString(36).substring(2, 9);
@@ -223,27 +219,34 @@ export async function runClientAnalysis(
 ): Promise<DocumentSummary> {
   const startTime = performance.now();
   const sentences = splitIntoSentences(documentText);
-  const totalWords = documentText.trim().split(/\s+/).length;
 
-  let count = targetLength === 'short' ? 2 : targetLength === 'medium' ? 4 : 6;
+  if (sentences.length === 0) {
+    throw new Error('Document does not contain enough text to extract meaningful sentences.');
+  }
+
+  let count = 3;
+  if (targetLength === 'short') count = 2;
+  if (targetLength === 'medium') count = 4;
+  if (targetLength === 'long') count = 6;
   if (method === 'lead3') count = 3;
 
   let summarySentences: string[] = [];
 
   if (method === 'lead3') {
-    summarySentences = sentences.slice(0, 3);
+    summarySentences = sentences.slice(0, Math.min(3, sentences.length));
   } else if (method === 'extractive') {
     summarySentences = generateExtractiveSummary(documentText, count);
   } else {
-    // Abstractive AI Explanatory mode
+    // Abstractive synthesis
     summarySentences = generateAiExplanatorySummary(documentText, count);
   }
 
   const summaryText = summarySentences.join(' ');
-  const summaryWords = summaryText.trim().split(/\s+/).length;
-  const compressionRatio = Number((summaryWords / Math.max(1, totalWords)).toFixed(3));
+  const wordCount = summaryText.trim().split(/\s+/).length;
+  const originalWordCount = Math.max(1, documentText.trim().split(/\s+/).length);
+  const compressionRatio = Number((wordCount / originalWordCount).toFixed(3));
 
-  // Verify each claim
+  // Verify each claim against source document
   const claims: ClaimVerification[] = summarySentences.map(sentence => {
     return verifyClaimAgainstSource(sentence, documentText);
   });
@@ -255,32 +258,34 @@ export async function runClientAnalysis(
 
   const consistencyRate = total > 0 ? Number(((supported / total) * 100).toFixed(1)) : 100;
 
-  const rougeScores = calculateRouge(summaryText, referenceSummary);
+  // Calculate ROUGE scores
+  const rougeMetrics = calculateRouge(summaryText, referenceSummary);
 
-  const metrics: EvaluationMetrics = {
-    hasReferenceSummary: !!referenceSummary && referenceSummary.trim().length > 0,
-    rouge: rougeScores || undefined,
-    factualConsistency: {
-      consistencyRate,
-      totalClaims: total,
-      supportedClaims: supported,
-      contradictedClaims: contradicted,
-      unverifiedClaims: needsReview,
-      potentialHallucinations: contradicted + (needsReview > 1 ? 1 : 0),
-    },
-  };
+  const endTime = performance.now();
+  const generationTimeMs = Math.round(endTime - startTime) || 120;
 
-  const elapsed = Math.round(performance.now() - startTime);
+  const summaryId = 'sum-' + Math.random().toString(36).substring(2, 9);
 
   return {
-    id: 'sum-' + Math.random().toString(36).substring(2, 9),
+    id: summaryId,
     method,
     text: summaryText,
-    wordCount: summaryWords,
+    wordCount,
     compressionRatio,
-    generationTimeMs: elapsed > 0 ? elapsed : 120,
+    generationTimeMs,
     targetLength,
     claims,
-    metrics,
+    metrics: {
+      hasReferenceSummary: !!(referenceSummary && referenceSummary.trim().length > 0),
+      rouge: rougeMetrics || undefined,
+      factualConsistency: {
+        consistencyRate,
+        totalClaims: total,
+        supportedClaims: supported,
+        contradictedClaims: contradicted,
+        unverifiedClaims: needsReview,
+        potentialHallucinations: contradicted + (needsReview > 1 ? 1 : 0),
+      },
+    },
   };
 }

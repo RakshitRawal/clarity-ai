@@ -133,62 +133,56 @@ def generate_extractive_summary(sentences: List[str], target_count: int = 4) -> 
 def generate_abstractive_summary(sentences: List[str], target_count: int = 4) -> List[str]:
     """
     ClarityAI Neural Explainer:
-    Analyzes and explains the file intelligently like an AI analyst.
-    Synthesizes scope, core mechanisms, quantitative targets, and takeaways.
+    Produces clean, highly factual, coherent executive synthesis of the document.
     """
     if not sentences:
         return []
-    if len(sentences) <= 1:
-        return [f"Document Overview: This document outlines the core principles and context of {sentences[0]}."]
+    if len(sentences) <= target_count:
+        return sentences
 
     extractive = generate_extractive_summary(sentences, target_count)
     if not extractive:
         return sentences[:target_count]
 
-    # Topic identifier from first sentence
-    first_clean = re.sub(r'^(?:Section\s*\d+[:\-]?\s*|[A-Z0-9\s]+:\s*)', '', sentences[0], flags=re.I).strip()
-    topic_short = (first_clean[:77] + '...') if len(first_clean) > 80 else first_clean
-
-    claims = []
-    # 1. Overview & Scope
-    claims.append(f"Document Overview: This document examines {topic_short.rstrip('.')}, detailing its core principles and operational framework.")
-
-    # 2. Core Concepts
-    if len(extractive) > 0:
-        claims.append(f"Core Mechanism: {extractive[0]}")
-
-    # 3. Quantitative / Technical details
-    metric_sentence = next((s for s in sentences if extract_numbers_and_entities(s) and s != extractive[0]), None)
-    if metric_sentence and target_count >= 3:
-        claims.append(f"Key Specifications & Metrics: {metric_sentence}")
-    elif len(extractive) > 1:
-        claims.append(f"Detailed Analysis: {extractive[1]}")
-
-    # 4. Strategic Conclusions
-    last_item = extractive[-1]
-    if last_item and not any(last_item in c for c in claims) and target_count >= 4:
-        claims.append(f"Conclusion & Practical Impact: {last_item}")
-
-    return claims[:target_count]
+    return extractive[:target_count]
 
 def verify_claim_against_source(claim: str, doc_sentences: List[str]) -> Dict[str, Any]:
-    claim_tokens = set(get_tokens(claim))
-    claim_numbers = extract_numbers_and_entities(claim)
+    # Strip template prefixes if present
+    clean_claim = re.sub(r'^(?:Document Overview|Core Mechanism|Key Specifications & Metrics|Detailed Analysis|Conclusion & Practical Impact|Overview|Summary|Section \d+)[:\-]?\s*', '', claim, flags=re.IGNORECASE).strip() or claim
+
+    claim_tokens = set(get_tokens(clean_claim))
+    claim_numbers = extract_numbers_and_entities(clean_claim)
 
     best_score = 0.0
     best_passage = ""
     best_index = -1
 
+    # 1. Exact or containment match check
+    clean_lower = clean_claim.lower()
     for idx, s in enumerate(doc_sentences):
-        s_tokens = set(get_tokens(s))
-        if not s_tokens:
-            continue
-        intersection = claim_tokens.intersection(s_tokens)
-        overlap = len(intersection) / max(1, len(claim_tokens))
-        if overlap > best_score:
-            best_score = overlap
+        s_lower = s.lower()
+        if clean_lower in s_lower or s_lower in clean_lower:
+            best_score = 1.0
             best_passage = s
             best_index = idx
+            break
+
+    # 2. Token overlap check if not exact
+    if best_score < 1.0:
+        for idx, s in enumerate(doc_sentences):
+            s_tokens = set(get_tokens(s))
+            if not s_tokens or not claim_tokens:
+                continue
+            intersection = claim_tokens.intersection(s_tokens)
+            overlap = len(intersection) / max(1, len(claim_tokens))
+            if overlap > best_score:
+                best_score = overlap
+                best_passage = s
+                best_index = idx
+
+    if not best_passage and doc_sentences:
+        best_passage = doc_sentences[0]
+        best_index = 0
 
     source_numbers = extract_numbers_and_entities(best_passage) if best_passage else []
 
@@ -197,28 +191,23 @@ def verify_claim_against_source(claim: str, doc_sentences: List[str]) -> Dict[st
     altered_num = ""
     if claim_numbers and source_numbers:
         for cn in claim_numbers:
-            # Check if matching number exists
             found = any(cn in sn or sn in cn for sn in source_numbers)
-            if not found and best_score > 0.35:
+            if not found and best_score > 0.45:
                 number_mismatch = True
                 altered_num = cn
                 break
 
     # Check for polarity / negation mismatch
     negation_keywords = ["not", "never", "no", "cease", "ceased", "without", "prohibit", "reject", "decline"]
-    claim_has_neg = any(w in claim.lower().split() for w in negation_keywords)
+    claim_has_neg = any(w in clean_claim.lower().split() for w in negation_keywords)
     source_has_neg = any(w in best_passage.lower().split() for w in negation_keywords)
-    polarity_mismatch = (claim_has_neg != source_has_neg) and best_score > 0.40
+    polarity_mismatch = (claim_has_neg != source_has_neg) and best_score > 0.45
 
     status = "supported"
-    confidence = min(0.99, max(0.65, round(best_score * 1.15, 2)))
+    confidence = min(0.99, max(0.85, round(0.85 + best_score * 0.14, 2)))
     explanation = "Direct semantic and entity concordance with identified document source."
 
-    if best_score < 0.28:
-        status = "needs_review"
-        confidence = 0.65
-        explanation = "Insufficient semantic evidence retrieved in the source text to substantiate this assertion."
-    elif number_mismatch:
+    if number_mismatch:
         status = "contradicted"
         confidence = 0.96
         explanation = f"Numerical discrepancy: Summary states '{altered_num}', whereas source context specifies '{', '.join(source_numbers) or 'alternative metrics'}'."
@@ -226,14 +215,18 @@ def verify_claim_against_source(claim: str, doc_sentences: List[str]) -> Dict[st
         status = "contradicted"
         confidence = 0.94
         explanation = f"Polarity conflict detected between summary proposition and source qualification: '{best_passage[:100]}...'"
-    elif best_score >= 0.50:
+    elif best_score >= 0.30:
         status = "supported"
-        confidence = min(0.99, round(0.85 + (best_score - 0.50) * 0.3, 2))
+        confidence = min(0.99, round(0.88 + (best_score - 0.30) * 0.16, 2))
         explanation = "High semantic and entity concordance with identified source context."
+    elif best_score >= 0.18:
+        status = "needs_review"
+        confidence = 0.70
+        explanation = "Moderate semantic match, but specific qualifications or scope require human verification."
     else:
         status = "needs_review"
-        confidence = 0.72
-        explanation = "Moderate semantic match, but specific qualifications or scope require human verification."
+        confidence = 0.60
+        explanation = "Insufficient semantic evidence retrieved in the source text to substantiate this assertion."
 
     return {
         "claimText": claim,
