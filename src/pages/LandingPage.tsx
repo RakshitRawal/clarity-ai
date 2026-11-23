@@ -9,9 +9,9 @@ import { LandingFooter } from '../components/landing/LandingFooter';
 
 export const LandingPage: React.FC = () => {
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-navy-950 text-slate-900 dark:text-slate-100 selection:bg-brand-500/20 selection:text-brand-700 dark:selection:text-brand-300">
+    <div className="min-h-screen bg-[#070b14] text-slate-100 selection:bg-brand-500/20 selection:text-brand-300 relative overflow-x-hidden">
       <LandingNav />
-      <main>
+      <main className="relative z-10">
         <HeroSection />
         <ProblemSolution />
         <HowItWorks />

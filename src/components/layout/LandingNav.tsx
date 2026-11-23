@@ -16,28 +16,28 @@ export const LandingNav: React.FC = () => {
   ];
 
   return (
-    <header className="sticky top-0 z-40 w-full backdrop-blur-md bg-white/80 dark:bg-navy-950/80 border-b border-slate-200/80 dark:border-slate-800/80 transition-colors">
+    <header className="sticky top-0 z-40 w-full backdrop-blur-md bg-[#070b14]/85 border-b border-slate-800/80 transition-colors">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16 sm:h-20">
           {/* Brand Logo */}
           <Logo size="md" showTagline={false} />
 
           {/* Desktop Navigation Links */}
-          <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-slate-600 dark:text-slate-300">
+          <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-slate-300">
             {navLinks.map(link => (
               <a
                 key={link.label}
                 href={link.href}
-                className="hover:text-brand-600 dark:hover:text-brand-400 transition-colors"
+                className="hover:text-brand-400 text-slate-300 transition-colors"
               >
                 {link.label}
               </a>
             ))}
             <Link
               to="/app/evaluation"
-              className="hover:text-brand-600 dark:hover:text-brand-400 transition-colors flex items-center gap-1 text-slate-700 dark:text-slate-200"
+              className="hover:text-brand-400 transition-colors flex items-center gap-1 text-slate-200"
             >
-              <Sparkles className="w-3.5 h-3.5 text-brand-500" />
+              <Sparkles className="w-3.5 h-3.5 text-brand-400" />
               <span>Leaderboard</span>
             </Link>
           </nav>
@@ -47,7 +47,7 @@ export const LandingNav: React.FC = () => {
             <ThemeToggle />
             <Link
               to="/app/overview"
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-charcoal-800 transition-colors"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold text-slate-200 hover:bg-slate-800/80 transition-colors"
             >
               Workspace
             </Link>
