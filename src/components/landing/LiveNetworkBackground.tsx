@@ -1,4 +1,5 @@
 import React, { useEffect, useRef } from 'react';
+import { useTheme } from '../../context/ThemeContext';
 
 interface Particle {
   x: number;
@@ -14,6 +15,8 @@ interface Particle {
 
 export const LiveNetworkBackground: React.FC = () => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -38,26 +41,30 @@ export const LiveNetworkBackground: React.FC = () => {
     handleResize();
     window.addEventListener('resize', handleResize);
 
-    // Color palette: Emerald (verified), Indigo/Lavender (model propositions), Mint
-    const nodeColors = [
-      { color: '#10b981', glow: 'rgba(16, 185, 129, 0.35)' }, // Emerald
-      { color: '#34d399', glow: 'rgba(52, 211, 153, 0.25)' }, // Mint
-      { color: '#818cf8', glow: 'rgba(129, 140, 248, 0.35)' }, // Lavender
-      { color: '#6366f1', glow: 'rgba(99, 102, 241, 0.25)' }, // Indigo
-    ];
+    // Color palette adapted dynamically for light/dark modes
+    const nodeColors = isDark
+      ? [
+          { color: '#10b981', glow: 'rgba(16, 185, 129, 0.35)' }, // Emerald
+          { color: '#34d399', glow: 'rgba(52, 211, 153, 0.25)' }, // Mint
+          { color: '#818cf8', glow: 'rgba(129, 140, 248, 0.35)' }, // Lavender
+          { color: '#6366f1', glow: 'rgba(99, 102, 241, 0.25)' }, // Indigo
+        ]
+      : [
+          { color: '#059669', glow: 'rgba(5, 150, 105, 0.25)' }, // Forest Emerald
+          { color: '#10b981', glow: 'rgba(16, 185, 129, 0.20)' }, // Emerald
+          { color: '#6366f1', glow: 'rgba(99, 102, 241, 0.25)' }, // Indigo
+          { color: '#4f46e5', glow: 'rgba(79, 70, 229, 0.20)' }, // Deep Violet
+        ];
 
-    // Elegant micro-particles
     const isDesktop = width >= 1024;
-    const particleCount = isDesktop ? 38 : 22;
+    const particleCount = isDesktop ? 36 : 20;
     const particles: Particle[] = [];
 
-    // Focus constellation center on the right side on desktop, center on mobile
     const focusX = isDesktop ? width * 0.72 : width * 0.5;
     const focusY = isDesktop ? height * 0.38 : height * 0.55;
 
     for (let i = 0; i < particleCount; i++) {
       const colorScheme = nodeColors[Math.floor(Math.random() * nodeColors.length)];
-      // Spawn particles distributed with slight bias towards the right hub
       const angle = Math.random() * Math.PI * 2;
       const dist = Math.random() * (isDesktop ? 450 : 280);
       const px = focusX + Math.cos(angle) * dist + (Math.random() - 0.5) * 120;
@@ -66,9 +73,9 @@ export const LiveNetworkBackground: React.FC = () => {
       particles.push({
         x: Math.max(20, Math.min(width - 20, px)),
         y: Math.max(20, Math.min(height - 20, py)),
-        vx: (Math.random() - 0.5) * 0.32,
-        vy: (Math.random() - 0.5) * 0.32,
-        baseRadius: Math.random() * 1.5 + 1.5, // 1.5px - 3.0px micro-nodes
+        vx: (Math.random() - 0.5) * 0.30,
+        vy: (Math.random() - 0.5) * 0.30,
+        baseRadius: Math.random() * 1.5 + 1.5,
         color: colorScheme.color,
         glowColor: colorScheme.glow,
         pulseSpeed: Math.random() * 0.025 + 0.015,
@@ -76,7 +83,6 @@ export const LiveNetworkBackground: React.FC = () => {
       });
     }
 
-    // Subtle mouse attraction
     let mouseX = -1000;
     let mouseY = -1000;
     const handleMouseMove = (e: MouseEvent) => {
@@ -92,8 +98,6 @@ export const LiveNetworkBackground: React.FC = () => {
     window.addEventListener('mousemove', handleMouseMove);
     document.addEventListener('mouseleave', handleMouseLeave);
 
-    let rotationAngle = 0;
-
     const render = () => {
       ctx.clearRect(0, 0, width, height);
 
@@ -101,24 +105,27 @@ export const LiveNetworkBackground: React.FC = () => {
       const radarCenterX = isDesktopNow ? width * 0.72 : width * 0.5;
       const radarCenterY = isDesktopNow ? height * 0.40 : height * 0.55;
 
-      // 1. Concentric Orbital / Radar Rings (Subtle and focused behind the claim card)
-      rotationAngle += 0.0006;
+      // 1. Concentric Orbital / Radar Rings
       const ringRadii = [140, 250, 380, 520, 680];
 
       ctx.save();
       ringRadii.forEach((radius, idx) => {
         ctx.beginPath();
         ctx.arc(radarCenterX, radarCenterY, radius, 0, Math.PI * 2);
-        ctx.strokeStyle = idx % 2 === 0
-          ? 'rgba(99, 102, 241, 0.08)'
-          : 'rgba(16, 185, 129, 0.06)';
+        ctx.strokeStyle = isDark
+          ? idx % 2 === 0
+            ? 'rgba(99, 102, 241, 0.08)'
+            : 'rgba(16, 185, 129, 0.06)'
+          : idx % 2 === 0
+            ? 'rgba(99, 102, 241, 0.12)'
+            : 'rgba(16, 185, 129, 0.10)';
         ctx.lineWidth = 1;
         ctx.setLineDash(idx === 1 || idx === 3 ? [4, 8] : []);
         ctx.stroke();
       });
       ctx.restore();
 
-      // 2. Network Edges (Thin, crisp connections)
+      // 2. Network Edges
       const maxDistance = 140;
       for (let i = 0; i < particles.length; i++) {
         for (let j = i + 1; j < particles.length; j++) {
@@ -127,7 +134,7 @@ export const LiveNetworkBackground: React.FC = () => {
           const dist = Math.sqrt(dx * dx + dy * dy);
 
           if (dist < maxDistance) {
-            const alpha = (1 - dist / maxDistance) * 0.25;
+            const alpha = (1 - dist / maxDistance) * (isDark ? 0.25 : 0.35);
             ctx.beginPath();
             ctx.moveTo(particles[i].x, particles[i].y);
             ctx.lineTo(particles[j].x, particles[j].y);
@@ -138,8 +145,13 @@ export const LiveNetworkBackground: React.FC = () => {
               particles[j].x,
               particles[j].y
             );
-            grad.addColorStop(0, `rgba(129, 140, 248, ${alpha})`);
-            grad.addColorStop(1, `rgba(16, 185, 129, ${alpha})`);
+            if (isDark) {
+              grad.addColorStop(0, `rgba(129, 140, 248, ${alpha})`);
+              grad.addColorStop(1, `rgba(16, 185, 129, ${alpha})`);
+            } else {
+              grad.addColorStop(0, `rgba(79, 70, 229, ${alpha})`);
+              grad.addColorStop(1, `rgba(5, 150, 105, ${alpha})`);
+            }
 
             ctx.strokeStyle = grad;
             ctx.lineWidth = 0.9;
@@ -153,23 +165,24 @@ export const LiveNetworkBackground: React.FC = () => {
           const mdy = particles[i].y - mouseY;
           const mDist = Math.sqrt(mdx * mdx + mdy * mdy);
           if (mDist < 150) {
-            const mAlpha = (1 - mDist / 150) * 0.3;
+            const mAlpha = (1 - mDist / 150) * (isDark ? 0.30 : 0.40);
             ctx.beginPath();
             ctx.moveTo(particles[i].x, particles[i].y);
             ctx.lineTo(mouseX, mouseY);
-            ctx.strokeStyle = `rgba(129, 140, 248, ${mAlpha})`;
+            ctx.strokeStyle = isDark
+              ? `rgba(129, 140, 248, ${mAlpha})`
+              : `rgba(79, 70, 229, ${mAlpha})`;
             ctx.lineWidth = 1;
             ctx.stroke();
           }
         }
       }
 
-      // 3. Render Particles (Crisp glowing dots)
+      // 3. Render Particles
       particles.forEach(p => {
         p.x += p.vx;
         p.y += p.vy;
 
-        // Keep within bounds
         if (p.x < 15) { p.x = 15; p.vx *= -1; }
         else if (p.x > width - 15) { p.x = width - 15; p.vx *= -1; }
 
@@ -179,13 +192,11 @@ export const LiveNetworkBackground: React.FC = () => {
         p.pulsePhase += p.pulseSpeed;
         const currentRadius = p.baseRadius + Math.sin(p.pulsePhase) * 0.4;
 
-        // Subtle outer glow
         ctx.beginPath();
         ctx.arc(p.x, p.y, currentRadius * 2.2, 0, Math.PI * 2);
         ctx.fillStyle = p.glowColor;
         ctx.fill();
 
-        // Sharp core dot
         ctx.beginPath();
         ctx.arc(p.x, p.y, currentRadius, 0, Math.PI * 2);
         ctx.fillStyle = p.color;
@@ -203,31 +214,45 @@ export const LiveNetworkBackground: React.FC = () => {
       window.removeEventListener('mousemove', handleMouseMove);
       document.removeEventListener('mouseleave', handleMouseLeave);
     };
-  }, []);
+  }, [isDark]);
 
   return (
-    <div className="absolute inset-0 overflow-hidden pointer-events-none -z-10 select-none">
-      {/* Deep Cybernetic Cosmic Radial Background */}
+    <div className="absolute inset-0 overflow-hidden pointer-events-none -z-10 select-none transition-colors duration-300">
+      {/* Background Gradient Layer */}
       <div
-        className="absolute inset-0"
+        className="absolute inset-0 transition-opacity duration-300"
         style={{
-          background:
-            'radial-gradient(ellipse at 70% 35%, #0d1527 0%, #080c16 55%, #04060c 100%)',
+          background: isDark
+            ? 'radial-gradient(ellipse at 70% 35%, #0d1527 0%, #080c16 55%, #04060c 100%)'
+            : 'radial-gradient(ellipse at 70% 35%, #eef2ff 0%, #f8fafc 55%, #f1f5f9 100%)',
         }}
       />
 
-      {/* Luminous Aurora Glows focused behind the card hub */}
-      <div className="absolute top-1/3 right-1/4 w-[550px] h-[450px] bg-gradient-to-tr from-brand-600/15 via-emerald-500/10 to-violet-500/12 blur-[120px] rounded-full pointer-events-none" />
-      <div className="absolute top-1/4 left-10 w-[400px] h-[350px] bg-gradient-to-br from-indigo-900/12 via-brand-900/8 to-transparent blur-[100px] rounded-full pointer-events-none" />
+      {/* Luminous Aurora Glows */}
+      <div
+        className={`absolute top-1/3 right-1/4 w-[550px] h-[450px] blur-[120px] rounded-full pointer-events-none transition-all duration-300 ${
+          isDark
+            ? 'bg-gradient-to-tr from-brand-600/15 via-emerald-500/10 to-violet-500/12'
+            : 'bg-gradient-to-tr from-brand-400/25 via-emerald-400/20 to-violet-400/20'
+        }`}
+      />
+      <div
+        className={`absolute top-1/4 left-10 w-[400px] h-[350px] blur-[100px] rounded-full pointer-events-none transition-all duration-300 ${
+          isDark
+            ? 'bg-gradient-to-br from-indigo-900/12 via-brand-900/8 to-transparent'
+            : 'bg-gradient-to-br from-indigo-200/40 via-brand-200/30 to-transparent'
+        }`}
+      />
 
       {/* Live Animated Canvas */}
       <canvas ref={canvasRef} className="absolute inset-0 w-full h-full opacity-90" />
 
-      {/* Subtle Grid Pattern Overlay */}
+      {/* Grid Pattern Overlay */}
       <div
-        className="absolute inset-0 opacity-[0.025] pointer-events-none"
+        className="absolute inset-0 pointer-events-none"
         style={{
-          backgroundImage: `radial-gradient(circle at 1px 1px, #ffffff 1px, transparent 0)`,
+          opacity: isDark ? 0.025 : 0.045,
+          backgroundImage: `radial-gradient(circle at 1px 1px, ${isDark ? '#ffffff' : '#0f172a'} 1px, transparent 0)`,
           backgroundSize: '32px 32px',
         }}
       />
