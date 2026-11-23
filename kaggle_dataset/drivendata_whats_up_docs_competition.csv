@@ -1,0 +1,8 @@
+Rank,Model_Name,Architecture,ROUGE_1,ROUGE_2,ROUGE_L,Factual_Consistency_Pct,Hallucination_Rate_Pct,Compression_Ratio_Pct,Passed_Consistency_Gate,Competition_Score,Award
+1,ClarityAI Hybrid (Extractive-Guided Abstractive),NLI-Constrained Cross-Encoder + Localized Slicing,48.6,24.8,44.1,96.2,2.1,28.4,YES (Pass >= 85%),92.4,Gold Medal
+2,Constrained LexRank Ensemble,Pure Graph Extractive Algorithm,44.8,20.4,39.8,98.4,1.6,30.5,YES (Pass >= 85%),89.1,Silver Medal
+3,Claude 3.5 Sonnet (Direct Prompting),Proprietary Frontier LLM,47.1,23.0,42.5,85.0,9.4,25.8,YES (Pass >= 85%),84.2,Bronze Medal
+4,GPT-4o (Zero-Shot Summary),Proprietary Generative LLM,46.2,22.1,41.8,81.5,12.8,24.5,NO (Below 85% Gate),75.2,Disqualified
+5,Lead-3 Extractive Baseline (Mandatory Competition Baseline),Heuristic Extractive Opening Sentences,38.2,15.8,34.0,98.4,0.0,32.1,YES (Pass >= 85%),78.5,Official Baseline
+6,Llama 3 70B Instruct,Open-Weights Foundation Model,44.8,20.9,39.7,78.4,15.6,26.2,NO (Below 85% Gate),71.0,Disqualified
+7,Unconstrained Fine-Tuned LLaMA-3 8B,Fine-Tuned Generative LLM,51.2,28.1,45.6,71.4,28.6,23.0,NO (High Hallucination Rate),62.0,Disqualified (Failed Gate)

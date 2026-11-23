@@ -1,0 +1,10 @@
+{
+  "title": "ClarityAI - Public Document Summarisation & Factual Consistency Benchmark",
+  "id": "rakshitrawal/clarityai-document-summarisation-dataset",
+  "licenses": [
+    {
+      "name": "CC0-1.0"
+    }
+  ],
+  "description": "Official evaluation dataset and benchmarks for public document summarisation without invented facts, aligned with the DrivenData competition 'What's Up, Docs? Document Summarization with LLMs'. Includes ROUGE-1/2/L metrics, Lead-3 baselines, and atomic claim-level NLI verification annotations."
+}
