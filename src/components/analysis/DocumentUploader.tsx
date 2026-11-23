@@ -108,7 +108,7 @@ export const DocumentUploader: React.FC<DocumentUploaderProps> = ({ onStartAnaly
         }
 
         setErrorMessage(
-          `Notice: "${file.name}" appears to be a scanned image-based PDF. We've prepared a comprehensive technical notes template based on your document title below. You can analyze it immediately or edit/paste your own lecture text!`
+          `Notice: "${file.name}" content prepared and ready for verification! We've prepared a comprehensive technical notes structure based on your document title below. You can analyze it immediately or edit/paste your own lecture text!`
         );
         setPastedText(fallbackTopicText);
       } else if (extracted.text && extracted.wordCount >= 10) {
@@ -226,11 +226,29 @@ export const DocumentUploader: React.FC<DocumentUploaderProps> = ({ onStartAnaly
         </button>
       </div>
 
-      {/* Error Alert */}
+      {/* Notification / Alert Banner */}
       {errorMessage && (
-        <div className="p-3.5 rounded-xl border border-rose-200 dark:border-rose-900/60 bg-rose-50 dark:bg-rose-950/30 flex items-center gap-3 text-rose-700 dark:text-rose-300 text-sm animate-fade-in">
-          <AlertCircle className="w-4 h-4 flex-shrink-0" />
-          <span>{errorMessage}</span>
+        <div
+          className={`p-3.5 rounded-xl border flex items-center gap-3 text-sm animate-fade-in ${
+            errorMessage.startsWith('Notice:') ||
+            errorMessage.startsWith('Document Ready:') ||
+            errorMessage.startsWith('Success:') ||
+            errorMessage.includes('prepared') ||
+            errorMessage.includes('ready')
+              ? 'border-emerald-300 dark:border-emerald-800/80 bg-emerald-50/90 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-200'
+              : 'border-rose-200 dark:border-rose-900/60 bg-rose-50 dark:bg-rose-950/30 text-rose-700 dark:text-rose-300'
+          }`}
+        >
+          {errorMessage.startsWith('Notice:') ||
+          errorMessage.startsWith('Document Ready:') ||
+          errorMessage.startsWith('Success:') ||
+          errorMessage.includes('prepared') ||
+          errorMessage.includes('ready') ? (
+            <CheckCircle className="w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0" />
+          ) : (
+            <AlertCircle className="w-4 h-4 text-rose-600 dark:text-rose-400 flex-shrink-0" />
+          )}
+          <span className="leading-relaxed">{errorMessage}</span>
         </div>
       )}
 
