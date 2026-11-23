@@ -5,7 +5,7 @@ interface Particle {
   y: number;
   vx: number;
   vy: number;
-  radius: number;
+  baseRadius: number;
   color: string;
   glowColor: string;
   pulseSpeed: number;
@@ -26,7 +26,6 @@ export const LiveNetworkBackground: React.FC = () => {
     let width = 0;
     let height = 0;
 
-    // Responsive canvas resizing with Retina support
     const handleResize = () => {
       const dpr = Math.min(window.devicePixelRatio || 1, 2);
       width = canvas.parentElement?.clientWidth || window.innerWidth;
@@ -39,34 +38,45 @@ export const LiveNetworkBackground: React.FC = () => {
     handleResize();
     window.addEventListener('resize', handleResize);
 
-    // Color palette matching the reference image: emerald green & violet/indigo nodes
+    // Color palette: Emerald (verified), Indigo/Lavender (model propositions), Mint
     const nodeColors = [
-      { color: '#10b981', glow: 'rgba(16, 185, 129, 0.45)' }, // Emerald Verified
-      { color: '#34d399', glow: 'rgba(52, 211, 153, 0.35)' }, // Mint Green
-      { color: '#818cf8', glow: 'rgba(129, 140, 248, 0.45)' }, // Indigo Lavender
-      { color: '#6366f1', glow: 'rgba(99, 102, 241, 0.35)' }, // Deep Violet
+      { color: '#10b981', glow: 'rgba(16, 185, 129, 0.35)' }, // Emerald
+      { color: '#34d399', glow: 'rgba(52, 211, 153, 0.25)' }, // Mint
+      { color: '#818cf8', glow: 'rgba(129, 140, 248, 0.35)' }, // Lavender
+      { color: '#6366f1', glow: 'rgba(99, 102, 241, 0.25)' }, // Indigo
     ];
 
-    // Initialize particles
-    const particleCount = Math.max(28, Math.min(55, Math.floor((width * height) / 25000)));
+    // Elegant micro-particles
+    const isDesktop = width >= 1024;
+    const particleCount = isDesktop ? 38 : 22;
     const particles: Particle[] = [];
+
+    // Focus constellation center on the right side on desktop, center on mobile
+    const focusX = isDesktop ? width * 0.72 : width * 0.5;
+    const focusY = isDesktop ? height * 0.38 : height * 0.55;
 
     for (let i = 0; i < particleCount; i++) {
       const colorScheme = nodeColors[Math.floor(Math.random() * nodeColors.length)];
+      // Spawn particles distributed with slight bias towards the right hub
+      const angle = Math.random() * Math.PI * 2;
+      const dist = Math.random() * (isDesktop ? 450 : 280);
+      const px = focusX + Math.cos(angle) * dist + (Math.random() - 0.5) * 120;
+      const py = focusY + Math.sin(angle) * dist + (Math.random() - 0.5) * 120;
+
       particles.push({
-        x: Math.random() * width,
-        y: Math.random() * height,
-        vx: (Math.random() - 0.5) * 0.45,
-        vy: (Math.random() - 0.5) * 0.45,
-        radius: Math.random() * 2.5 + 2.5, // 2.5px to 5px
+        x: Math.max(20, Math.min(width - 20, px)),
+        y: Math.max(20, Math.min(height - 20, py)),
+        vx: (Math.random() - 0.5) * 0.32,
+        vy: (Math.random() - 0.5) * 0.32,
+        baseRadius: Math.random() * 1.5 + 1.5, // 1.5px - 3.0px micro-nodes
         color: colorScheme.color,
         glowColor: colorScheme.glow,
-        pulseSpeed: Math.random() * 0.02 + 0.01,
+        pulseSpeed: Math.random() * 0.025 + 0.015,
         pulsePhase: Math.random() * Math.PI * 2,
       });
     }
 
-    // Interactive mouse tethering
+    // Subtle mouse attraction
     let mouseX = -1000;
     let mouseY = -1000;
     const handleMouseMove = (e: MouseEvent) => {
@@ -84,32 +94,32 @@ export const LiveNetworkBackground: React.FC = () => {
 
     let rotationAngle = 0;
 
-    // Animation loop
     const render = () => {
       ctx.clearRect(0, 0, width, height);
 
-      const centerX = width * 0.5;
-      const centerY = height * 0.42;
+      const isDesktopNow = width >= 1024;
+      const radarCenterX = isDesktopNow ? width * 0.72 : width * 0.5;
+      const radarCenterY = isDesktopNow ? height * 0.40 : height * 0.55;
 
-      // 1. Draw Concentric Orbital / Radar Circles (from reference image)
-      rotationAngle += 0.0008;
-      const ringRadii = [180, 320, 480, 660, 860];
+      // 1. Concentric Orbital / Radar Rings (Subtle and focused behind the claim card)
+      rotationAngle += 0.0006;
+      const ringRadii = [140, 250, 380, 520, 680];
 
       ctx.save();
       ringRadii.forEach((radius, idx) => {
         ctx.beginPath();
-        ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+        ctx.arc(radarCenterX, radarCenterY, radius, 0, Math.PI * 2);
         ctx.strokeStyle = idx % 2 === 0
-          ? 'rgba(99, 102, 241, 0.07)'
-          : 'rgba(16, 185, 129, 0.05)';
-        ctx.lineWidth = 1.2;
-        ctx.setLineDash(idx === 1 || idx === 3 ? [6, 12] : []);
+          ? 'rgba(99, 102, 241, 0.08)'
+          : 'rgba(16, 185, 129, 0.06)';
+        ctx.lineWidth = 1;
+        ctx.setLineDash(idx === 1 || idx === 3 ? [4, 8] : []);
         ctx.stroke();
       });
       ctx.restore();
 
-      // 2. Draw Network Connecting Edges (Lines between nearby nodes)
-      const maxDistance = 150;
+      // 2. Network Edges (Thin, crisp connections)
+      const maxDistance = 140;
       for (let i = 0; i < particles.length; i++) {
         for (let j = i + 1; j < particles.length; j++) {
           const dx = particles[i].x - particles[j].x;
@@ -117,85 +127,69 @@ export const LiveNetworkBackground: React.FC = () => {
           const dist = Math.sqrt(dx * dx + dy * dy);
 
           if (dist < maxDistance) {
-            const alpha = (1 - dist / maxDistance) * 0.22;
+            const alpha = (1 - dist / maxDistance) * 0.25;
             ctx.beginPath();
             ctx.moveTo(particles[i].x, particles[i].y);
             ctx.lineTo(particles[j].x, particles[j].y);
 
-            // Subtle gradient line between nodes
             const grad = ctx.createLinearGradient(
               particles[i].x,
               particles[i].y,
               particles[j].x,
               particles[j].y
             );
-            grad.addColorStop(0, `rgba(99, 102, 241, ${alpha})`);
+            grad.addColorStop(0, `rgba(129, 140, 248, ${alpha})`);
             grad.addColorStop(1, `rgba(16, 185, 129, ${alpha})`);
 
             ctx.strokeStyle = grad;
-            ctx.lineWidth = 1;
+            ctx.lineWidth = 0.9;
             ctx.stroke();
           }
         }
 
-        // Connect to mouse if nearby
+        // Mouse tethering
         if (mouseX > 0 && mouseY > 0) {
           const mdx = particles[i].x - mouseX;
           const mdy = particles[i].y - mouseY;
           const mDist = Math.sqrt(mdx * mdx + mdy * mdy);
-          if (mDist < 180) {
-            const mAlpha = (1 - mDist / 180) * 0.35;
+          if (mDist < 150) {
+            const mAlpha = (1 - mDist / 150) * 0.3;
             ctx.beginPath();
             ctx.moveTo(particles[i].x, particles[i].y);
             ctx.lineTo(mouseX, mouseY);
             ctx.strokeStyle = `rgba(129, 140, 248, ${mAlpha})`;
-            ctx.lineWidth = 1.2;
+            ctx.lineWidth = 1;
             ctx.stroke();
           }
         }
       }
 
-      // 3. Update & Draw Particles (Glowing constellation nodes)
+      // 3. Render Particles (Crisp glowing dots)
       particles.forEach(p => {
-        // Move particle
         p.x += p.vx;
         p.y += p.vy;
 
-        // Bounce gently on edges
-        if (p.x < 10) {
-          p.x = 10;
-          p.vx *= -1;
-        } else if (p.x > width - 10) {
-          p.x = width - 10;
-          p.vx *= -1;
-        }
+        // Keep within bounds
+        if (p.x < 15) { p.x = 15; p.vx *= -1; }
+        else if (p.x > width - 15) { p.x = width - 15; p.vx *= -1; }
 
-        if (p.y < 10) {
-          p.y = 10;
-          p.vy *= -1;
-        } else if (p.y > height - 10) {
-          p.y = height - 10;
-          p.vy *= -1;
-        }
+        if (p.y < 15) { p.y = 15; p.vy *= -1; }
+        else if (p.y > height - 15) { p.y = height - 15; p.vy *= -1; }
 
-        // Pulsing glow radius
         p.pulsePhase += p.pulseSpeed;
-        const currentRadius = p.radius + Math.sin(p.pulsePhase) * 0.8;
+        const currentRadius = p.baseRadius + Math.sin(p.pulsePhase) * 0.4;
 
-        // Outer glow halo
+        // Subtle outer glow
         ctx.beginPath();
-        ctx.arc(p.x, p.y, currentRadius * 3, 0, Math.PI * 2);
+        ctx.arc(p.x, p.y, currentRadius * 2.2, 0, Math.PI * 2);
         ctx.fillStyle = p.glowColor;
         ctx.fill();
 
-        // Core bright dot
+        // Sharp core dot
         ctx.beginPath();
         ctx.arc(p.x, p.y, currentRadius, 0, Math.PI * 2);
         ctx.fillStyle = p.color;
-        ctx.shadowColor = p.color;
-        ctx.shadowBlur = 8;
         ctx.fill();
-        ctx.shadowBlur = 0; // Reset shadow for performance
       });
 
       animationFrameId = requestAnimationFrame(render);
@@ -218,23 +212,23 @@ export const LiveNetworkBackground: React.FC = () => {
         className="absolute inset-0"
         style={{
           background:
-            'radial-gradient(circle at 50% 25%, #0f1629 0%, #090e1c 50%, #050811 100%)',
+            'radial-gradient(ellipse at 70% 35%, #0d1527 0%, #080c16 55%, #04060c 100%)',
         }}
       />
 
-      {/* Subtle Luminous Aurora Glows */}
-      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[850px] h-[550px] bg-gradient-to-tr from-brand-600/18 via-emerald-500/12 to-violet-500/10 blur-[130px] rounded-full pointer-events-none" />
-      <div className="absolute top-2/3 right-1/4 w-[500px] h-[400px] bg-gradient-to-br from-emerald-600/10 via-brand-600/10 to-transparent blur-[110px] rounded-full pointer-events-none" />
+      {/* Luminous Aurora Glows focused behind the card hub */}
+      <div className="absolute top-1/3 right-1/4 w-[550px] h-[450px] bg-gradient-to-tr from-brand-600/15 via-emerald-500/10 to-violet-500/12 blur-[120px] rounded-full pointer-events-none" />
+      <div className="absolute top-1/4 left-10 w-[400px] h-[350px] bg-gradient-to-br from-indigo-900/12 via-brand-900/8 to-transparent blur-[100px] rounded-full pointer-events-none" />
 
-      {/* Live Animated Canvas (Constellations, Orbitals, Glowing Nodes) */}
-      <canvas ref={canvasRef} className="absolute inset-0 w-full h-full opacity-85" />
+      {/* Live Animated Canvas */}
+      <canvas ref={canvasRef} className="absolute inset-0 w-full h-full opacity-90" />
 
-      {/* Subtle Grid / Noise Overlay for tactile texture */}
+      {/* Subtle Grid Pattern Overlay */}
       <div
-        className="absolute inset-0 opacity-[0.035] pointer-events-none"
+        className="absolute inset-0 opacity-[0.025] pointer-events-none"
         style={{
           backgroundImage: `radial-gradient(circle at 1px 1px, #ffffff 1px, transparent 0)`,
-          backgroundSize: '36px 36px',
+          backgroundSize: '32px 32px',
         }}
       />
     </div>

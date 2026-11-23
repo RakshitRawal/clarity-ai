@@ -11,15 +11,57 @@ import {
   Sparkles,
   Layers,
   ChevronRight,
-  Eye,
   Check,
+  ExternalLink,
 } from 'lucide-react';
 import { ClaimBadge } from '../common/Badge';
 import { LiveNetworkBackground } from './LiveNetworkBackground';
 
 export const HeroSection: React.FC = () => {
   const [activePreviewClaim, setActivePreviewClaim] = useState<number>(1);
+  const [activeHeroCardClaim, setActiveHeroCardClaim] = useState<number>(0);
 
+  // Claims for the Illustrative Claim Check Card in the Hero right column
+  const heroCardClaims = [
+    {
+      id: 0,
+      text: 'Council approved bus route funding in March.',
+      status: 'verified' as const,
+      section: 'S4',
+      score: 0.94,
+      scorePercent: '94%',
+      barColor: 'bg-emerald-400',
+      badgeBg: 'border-emerald-500/40 bg-emerald-950/60 text-emerald-300',
+      quote: 'Section 4.2: In March 2024, the municipal council unanimously passed Resolution 142 granting £12.5M for city bus network modernization.',
+      rationale: 'Fully supported by official council minutes (Para 4).',
+    },
+    {
+      id: 1,
+      text: 'Residents have two months to object.',
+      status: 'needs_review' as const,
+      section: 'S11',
+      score: 0.42,
+      scorePercent: '42%',
+      barColor: 'bg-amber-400',
+      badgeBg: 'border-amber-500/40 bg-amber-950/60 text-amber-300',
+      quote: 'Section 11.0: Statutory consultation timeline provides a window of 60 calendar days from publication for registered feedback.',
+      rationale: 'Requires human legal review: "60 calendar days" may diverge from "two calendar months".',
+    },
+    {
+      id: 2,
+      text: 'Fares will increase by 15% starting next month.',
+      status: 'contradicted' as const,
+      section: 'S18',
+      score: 0.08,
+      scorePercent: '8%',
+      barColor: 'bg-rose-500',
+      badgeBg: 'border-rose-500/40 bg-rose-950/60 text-rose-300',
+      quote: 'Section 18.1: Passenger transit fares remain strictly frozen at 2023 rates through at least December 2025.',
+      rationale: 'Direct contradiction: The source confirms fares are frozen, not increased.',
+    },
+  ];
+
+  // Deep dive preview claims for the product preview below
   const previewClaims = [
     {
       id: 0,
@@ -51,141 +93,212 @@ export const HeroSection: React.FC = () => {
   ];
 
   return (
-    <section className="relative pt-12 pb-20 sm:pt-20 sm:pb-28 overflow-hidden">
+    <section className="relative pt-8 pb-20 sm:pt-14 sm:pb-28 overflow-hidden">
       {/* Live Moving Particle Constellation & Radar Rings Background */}
       <LiveNetworkBackground />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-        <div className="text-center max-w-3xl mx-auto mb-10 sm:mb-14">
-          {/* Hackathon Pill */}
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-semibold bg-brand-950/70 text-brand-300 border border-brand-800/80 mb-6 shadow-lg shadow-brand-950/50 backdrop-blur-md">
-            <ShieldCheck className="w-4 h-4 text-brand-400" />
-            <span>Public Document Summarisation Without Invented Facts</span>
-          </div>
+        {/* ========================================================= */}
+        {/* 2-COLUMN SPLIT HERO SECTION (Matches Reference Design)    */}
+        {/* ========================================================= */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-12 items-center mb-16 lg:mb-24">
+          {/* Left Column (7 cols): Hero Headline, Descriptions & CTAs */}
+          <div className="lg:col-span-7 text-left space-y-6">
+            {/* Hackathon Pill */}
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-semibold bg-brand-950/70 text-brand-300 border border-brand-800/80 shadow-lg shadow-brand-950/50 backdrop-blur-md">
+              <ShieldCheck className="w-4 h-4 text-brand-400" />
+              <span>Public Document Summarisation Without Invented Facts</span>
+            </div>
 
-          {/* Headline */}
-          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-white leading-[1.15]">
-            AI summaries with{' '}
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-400 via-indigo-300 to-emerald-400">
-              clarity you can verify.
-            </span>
-          </h1>
-
-          {/* Supporting text */}
-          <p className="mt-6 text-base sm:text-lg text-slate-300 leading-relaxed max-w-2xl mx-auto font-normal">
-            Turn lengthy public documents into concise summaries. Trace every important claim back to the original source and identify statements that need further review.
-          </p>
-
-          {/* CTAs */}
-          <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3">
-            <Link
-              to="/app/new"
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 px-6 py-3.5 rounded-xl font-semibold text-sm text-white bg-gradient-to-r from-brand-600 to-brand-700 hover:from-brand-500 hover:to-brand-600 shadow-xl shadow-brand-600/30 hover:shadow-brand-500/50 transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
-            >
-              <span>Analyse a Document</span>
-              <ArrowRight className="w-4 h-4" />
-            </Link>
-
-            <a
-              href="#how-it-works"
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl font-semibold text-sm border border-slate-700/80 bg-slate-900/80 backdrop-blur-md text-slate-200 hover:bg-slate-800/90 transition-colors shadow-sm"
-            >
-              <span>Explore How It Works</span>
-              <ChevronRight className="w-4 h-4 text-slate-400" />
-            </a>
-          </div>
-
-          {/* Illustrative Claim Check Card (Exact matching feature from design image) */}
-          <div className="mt-10 mx-auto max-w-lg p-5 rounded-2xl border border-indigo-500/25 bg-slate-900/85 backdrop-blur-md shadow-2xl shadow-indigo-950/60 text-left space-y-3.5">
-            <div className="flex items-center justify-between text-[11px] font-mono uppercase tracking-widest text-slate-400 font-bold border-b border-slate-800/80 pb-2.5">
-              <span>Illustrative Claim Check</span>
-              <span className="flex items-center gap-1.5 text-emerald-400">
-                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                Live Verification
+            {/* Headline */}
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-white leading-[1.12]">
+              AI summaries with{' '}
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-400 via-indigo-300 to-emerald-400">
+                clarity you can verify.
               </span>
+            </h1>
+
+            {/* Supporting text */}
+            <p className="text-base sm:text-lg text-slate-300 leading-relaxed max-w-xl font-normal">
+              Turn lengthy public documents, legislation, and policies into verified summaries. Trace every sentence back to exact source text with automated hallucination detection.
+            </p>
+
+            {/* CTA Buttons */}
+            <div className="pt-2 flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+              <Link
+                to="/app/new"
+                className="inline-flex items-center justify-center gap-2.5 px-6 py-3.5 rounded-xl font-semibold text-sm text-white bg-gradient-to-r from-brand-600 to-brand-700 hover:from-brand-500 hover:to-brand-600 shadow-xl shadow-brand-600/30 hover:shadow-brand-500/50 transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+              >
+                <span>Analyse a Document</span>
+                <ArrowRight className="w-4 h-4" />
+              </Link>
+
+              <a
+                href="#how-it-works"
+                className="inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl font-semibold text-sm border border-slate-700/80 bg-slate-900/80 backdrop-blur-md text-slate-200 hover:bg-slate-800/90 transition-colors shadow-sm"
+              >
+                <span>Explore How It Works</span>
+                <ChevronRight className="w-4 h-4 text-slate-400" />
+              </a>
             </div>
 
-            {/* Item 1: Verified */}
-            <div className="p-3.5 rounded-xl border border-slate-800/90 bg-slate-950/70 space-y-2">
-              <p className="text-xs sm:text-sm font-medium text-slate-200 leading-snug">
-                Council approved bus route funding in March.
-              </p>
-              <div className="flex items-center justify-between gap-3 text-xs pt-1">
-                <span className="px-2 py-0.5 rounded-full border border-emerald-500/40 bg-emerald-950/50 text-emerald-400 text-[11px] font-semibold whitespace-nowrap">
-                  Verified · S4
-                </span>
-                <div className="flex-1 h-2 bg-slate-800/90 rounded-full overflow-hidden">
-                  <div className="h-full bg-emerald-400 rounded-full transition-all duration-1000" style={{ width: '94%' }} />
-                </div>
-                <span className="font-mono text-emerald-400 font-bold text-xs">0.94</span>
+            {/* Trust Points / Micro-Stats */}
+            <div className="pt-4 grid grid-cols-3 gap-3 border-t border-slate-800/80 max-w-lg">
+              <div>
+                <div className="text-lg font-bold text-emerald-400 font-mono">100%</div>
+                <div className="text-[11px] text-slate-400 font-medium leading-tight">Evidence Grounded</div>
               </div>
-            </div>
-
-            {/* Item 2: Needs Review */}
-            <div className="p-3.5 rounded-xl border border-slate-800/90 bg-slate-950/70 space-y-2">
-              <p className="text-xs sm:text-sm font-medium text-slate-200 leading-snug">
-                Residents have two months to object.
-              </p>
-              <div className="flex items-center justify-between gap-3 text-xs pt-1">
-                <span className="px-2 py-0.5 rounded-full border border-amber-500/40 bg-amber-950/50 text-amber-400 text-[11px] font-semibold whitespace-nowrap">
-                  Needs review · S11
-                </span>
-                <div className="flex-1 h-2 bg-slate-800/90 rounded-full overflow-hidden">
-                  <div className="h-full bg-amber-400 rounded-full transition-all duration-1000" style={{ width: '42%' }} />
-                </div>
-                <span className="font-mono text-amber-400 font-bold text-xs">0.42</span>
+              <div>
+                <div className="text-lg font-bold text-brand-400 font-mono">3-Tier</div>
+                <div className="text-[11px] text-slate-400 font-medium leading-tight">NLI Verification</div>
+              </div>
+              <div>
+                <div className="text-lg font-bold text-indigo-300 font-mono">Lead-3</div>
+                <div className="text-[11px] text-slate-400 font-medium leading-tight">Extractive Baseline</div>
               </div>
             </div>
           </div>
 
-          {/* Three Value Propositions */}
-          <div className="mt-12 grid grid-cols-1 sm:grid-cols-3 gap-6 pt-8 border-t border-slate-800/70 text-left">
-            <div className="flex items-start gap-3">
-              <div className="p-2 rounded-lg bg-indigo-950/70 text-indigo-400 flex-shrink-0 border border-indigo-900/50">
-                <Search className="w-4 h-4" />
-              </div>
-              <div>
-                <h4 className="text-xs font-bold text-white uppercase tracking-wider">
-                  Source-linked evidence
-                </h4>
-                <p className="text-xs text-slate-400 mt-0.5 leading-relaxed">
-                  Every claim is tied directly to quotes and paragraphs in the original document.
-                </p>
-              </div>
-            </div>
+          {/* Right Column (5 cols): The Interactive Illustrative Claim Check Card */}
+          <div className="lg:col-span-5 relative">
+            {/* Subtle card backdrop glow */}
+            <div className="absolute -inset-1 rounded-2xl bg-gradient-to-r from-brand-500/20 via-emerald-500/20 to-purple-500/20 blur-xl opacity-70 -z-10" />
 
-            <div className="flex items-start gap-3">
-              <div className="p-2 rounded-lg bg-emerald-950/70 text-emerald-400 flex-shrink-0 border border-emerald-900/50">
-                <ShieldCheck className="w-4 h-4" />
+            <div className="rounded-2xl border border-indigo-500/30 bg-slate-900/90 backdrop-blur-xl shadow-2xl shadow-indigo-950/80 overflow-hidden">
+              {/* Card Header */}
+              <div className="p-4 bg-slate-950/80 border-b border-slate-800/80 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
+                  <span className="text-xs font-mono font-bold tracking-widest uppercase text-slate-300">
+                    Illustrative Claim Check
+                  </span>
+                </div>
+                <span className="text-[10px] font-mono font-semibold px-2 py-0.5 rounded bg-brand-950/80 text-brand-300 border border-brand-800/60">
+                  Interactive Preview
+                </span>
               </div>
-              <div>
-                <h4 className="text-xs font-bold text-white uppercase tracking-wider">
-                  Claim-level verification
-                </h4>
-                <p className="text-xs text-slate-400 mt-0.5 leading-relaxed">
-                  Atomic proposition check classifies assertions as Supported, Contradicted, or Needs Review.
-                </p>
-              </div>
-            </div>
 
-            <div className="flex items-start gap-3">
-              <div className="p-2 rounded-lg bg-purple-950/70 text-purple-400 flex-shrink-0 border border-purple-900/50">
-                <Layers className="w-4 h-4" />
+              {/* Claims List */}
+              <div className="p-4 space-y-3">
+                {heroCardClaims.map((claim) => {
+                  const isSelected = activeHeroCardClaim === claim.id;
+
+                  return (
+                    <div
+                      key={claim.id}
+                      onClick={() => setActiveHeroCardClaim(claim.id)}
+                      className={`p-3 rounded-xl border transition-all cursor-pointer ${
+                        isSelected
+                          ? 'border-brand-500/80 bg-slate-800/80 shadow-md'
+                          : 'border-slate-800/90 bg-slate-950/60 hover:border-slate-700 hover:bg-slate-900/70'
+                      }`}
+                    >
+                      <div className="flex items-start justify-between gap-2 mb-2">
+                        <p className="text-xs font-medium text-slate-200 leading-snug">
+                          {claim.text}
+                        </p>
+                        <span className={`px-2 py-0.5 rounded-full border text-[10px] font-semibold font-mono whitespace-nowrap ${claim.badgeBg}`}>
+                          {claim.status === 'verified' && `Verified · ${claim.section}`}
+                          {claim.status === 'needs_review' && `Needs review · ${claim.section}`}
+                          {claim.status === 'contradicted' && `Contradicted · ${claim.section}`}
+                        </span>
+                      </div>
+
+                      {/* Progress Bar & Numerical Score */}
+                      <div className="flex items-center gap-2.5 pt-0.5">
+                        <div className="flex-1 h-1.5 bg-slate-800 rounded-full overflow-hidden">
+                          <div
+                            className={`h-full ${claim.barColor} rounded-full transition-all duration-700`}
+                            style={{ width: claim.scorePercent }}
+                          />
+                        </div>
+                        <span className="font-mono text-xs font-bold text-slate-300 min-w-[32px] text-right">
+                          {claim.score.toFixed(2)}
+                        </span>
+                      </div>
+
+                      {/* Selected Claim Citation Drawer */}
+                      {isSelected && (
+                        <div className="mt-3 pt-2.5 border-t border-slate-700/60 space-y-1.5 animate-fadeIn">
+                          <div className="text-[10px] font-mono text-brand-300 font-semibold flex items-center gap-1">
+                            <FileText className="w-3 h-3 text-brand-400" />
+                            <span>Source Evidence Citation</span>
+                          </div>
+                          <p className="text-[11px] font-serif italic text-slate-300 bg-slate-950/80 p-2 rounded-lg border border-slate-800/80 leading-relaxed">
+                            "{claim.quote}"
+                          </p>
+                          <p className="text-[10px] text-slate-400 font-mono">
+                            {claim.rationale}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
-              <div>
-                <h4 className="text-xs font-bold text-white uppercase tracking-wider">
-                  Transparent evaluation
-                </h4>
-                <p className="text-xs text-slate-400 mt-0.5 leading-relaxed">
-                  ROUGE metrics paired with factual consistency rates reveal true model reliability.
-                </p>
+
+              {/* Card Footer note */}
+              <div className="px-4 py-2.5 bg-slate-950/90 border-t border-slate-800/80 flex items-center justify-between text-[11px] text-slate-400">
+                <span>Click any claim to inspect source citation</span>
+                <span className="font-mono text-emerald-400 font-semibold flex items-center gap-1">
+                  <Check className="w-3 h-3" /> Grounded
+                </span>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Sophisticated Product Preview */}
-        <div className="rounded-2xl border border-slate-800/90 bg-charcoal-900/90 backdrop-blur-md shadow-2xl overflow-hidden max-w-5xl mx-auto">
+        {/* ========================================================= */}
+        {/* THREE VALUE PROPOSITIONS (Glass Cards)                    */}
+        {/* ========================================================= */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 pt-10 pb-16 border-t border-slate-800/80 text-left">
+          <div className="p-4 rounded-xl border border-slate-800/80 bg-slate-900/50 backdrop-blur-sm flex items-start gap-3.5">
+            <div className="p-2.5 rounded-lg bg-indigo-950/80 text-indigo-400 flex-shrink-0 border border-indigo-900/60 shadow-inner">
+              <Search className="w-4 h-4" />
+            </div>
+            <div>
+              <h4 className="text-xs font-bold text-white uppercase tracking-wider">
+                Source-linked evidence
+              </h4>
+              <p className="text-xs text-slate-400 mt-1 leading-relaxed">
+                Every claim is tied directly to exact quotes, paragraphs, and sections in the original source document.
+              </p>
+            </div>
+          </div>
+
+          <div className="p-4 rounded-xl border border-slate-800/80 bg-slate-900/50 backdrop-blur-sm flex items-start gap-3.5">
+            <div className="p-2.5 rounded-lg bg-emerald-950/80 text-emerald-400 flex-shrink-0 border border-emerald-900/60 shadow-inner">
+              <ShieldCheck className="w-4 h-4" />
+            </div>
+            <div>
+              <h4 className="text-xs font-bold text-white uppercase tracking-wider">
+                Claim-level verification
+              </h4>
+              <p className="text-xs text-slate-400 mt-1 leading-relaxed">
+                Atomic proposition checking classifies every statement as Supported, Contradicted, or Needs Review.
+              </p>
+            </div>
+          </div>
+
+          <div className="p-4 rounded-xl border border-slate-800/80 bg-slate-900/50 backdrop-blur-sm flex items-start gap-3.5">
+            <div className="p-2.5 rounded-lg bg-purple-950/80 text-purple-400 flex-shrink-0 border border-purple-900/60 shadow-inner">
+              <Layers className="w-4 h-4" />
+            </div>
+            <div>
+              <h4 className="text-xs font-bold text-white uppercase tracking-wider">
+                Transparent evaluation
+              </h4>
+              <p className="text-xs text-slate-400 mt-1 leading-relaxed">
+                ROUGE-1, ROUGE-2, and ROUGE-L overlap scores paired with strict factual consistency rates.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* ========================================================= */}
+        {/* INTERACTIVE WORKSPACE SHOWCASE (Split View Preview)       */}
+        {/* ========================================================= */}
+        <div className="rounded-2xl border border-slate-800/90 bg-charcoal-900/90 backdrop-blur-md shadow-2xl overflow-hidden max-w-5xl mx-auto text-left">
           {/* Window Chrome Header */}
           <div className="p-3.5 bg-charcoal-950/90 border-b border-slate-800 flex items-center justify-between">
             <div className="flex items-center gap-2">
@@ -228,7 +341,7 @@ export const HeroSection: React.FC = () => {
                     <div
                       key={claim.id}
                       onClick={() => setActivePreviewClaim(claim.id)}
-                      className={`p-3.5 rounded-xl border text-left cursor-pointer transition-all ${
+                      className={`p-3.5 rounded-xl border transition-all cursor-pointer text-left ${
                         isSelected
                           ? claim.status === 'contradicted'
                             ? 'border-rose-500 bg-rose-950/30 ring-1 ring-rose-500'
