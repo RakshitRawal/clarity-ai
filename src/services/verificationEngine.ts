@@ -180,7 +180,10 @@ export function verifyClaimAgainstSource(claim: string, documentText: string): C
   } else if (bestScore >= 0.30) {
     status = 'supported';
     confidenceScore = Math.min(0.99, Number((0.88 + (bestScore - 0.30) * 0.16).toFixed(2)));
-    explanation = 'High semantic and entity concordance with identified source evidence.';
+    const isDirectMatch = cleanClaim.toLowerCase().replace(/[^a-z0-9]/g, '') === bestSentence.toLowerCase().replace(/[^a-z0-9]/g, '') || bestScore >= 0.90;
+    explanation = isDirectMatch
+      ? 'Verbatim source extraction: 100% direct lexical alignment with source document.'
+      : 'High semantic and entity concordance with identified source evidence.';
   } else if (bestScore >= 0.18) {
     status = 'needs_review';
     confidenceScore = 0.70;

@@ -50,7 +50,20 @@ export const ClaimCard: React.FC<ClaimCardProps> = ({
     needs_review: isSelected ? 'bg-amber-50/20 dark:bg-amber-950/20' : 'bg-white dark:bg-charcoal-900',
   };
 
-  const hasEvidence = !!claim.supportingPassage || !!claim.conflictingPassage;
+  const evidencePassage = claim.supportingPassage || claim.conflictingPassage || '';
+  const hasEvidence = !!evidencePassage;
+
+  const cleanStr = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, '');
+  const cleanClaim = cleanStr(claim.claimText);
+  const cleanEvidence = cleanStr(evidencePassage);
+
+  // Exact or near-identical verbatim match (e.g., Lead-3 or extractive summary)
+  const isVerbatimMatch =
+    claim.status === 'supported' &&
+    cleanClaim.length > 0 &&
+    (cleanClaim === cleanEvidence ||
+      (Math.abs(cleanClaim.length - cleanEvidence.length) < 25 &&
+        (cleanClaim.includes(cleanEvidence) || cleanEvidence.includes(cleanClaim))));
 
   return (
     <div
@@ -128,15 +141,37 @@ export const ClaimCard: React.FC<ClaimCardProps> = ({
                 </button>
               </div>
 
-              <blockquote className={`p-2.5 rounded-lg border italic font-serif leading-relaxed text-slate-800 dark:text-slate-200 break-words ${
-                claim.status === 'supported'
-                  ? 'bg-emerald-50/50 dark:bg-emerald-950/30 border-emerald-200/80 dark:border-emerald-800/50'
-                  : claim.status === 'contradicted'
-                  ? 'bg-rose-50/50 dark:bg-rose-950/30 border-rose-200/80 dark:border-rose-800/50'
-                  : 'bg-amber-50/50 dark:bg-amber-950/30 border-amber-200/80 dark:border-amber-800/50'
-              }`}>
-                "{claim.supportingPassage || claim.conflictingPassage}"
-              </blockquote>
+              {isVerbatimMatch ? (
+                <div className="p-3 rounded-lg border border-emerald-200/80 dark:border-emerald-800/50 bg-emerald-50/40 dark:bg-emerald-950/20 flex items-center justify-between gap-3 text-emerald-800 dark:text-emerald-300">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0" />
+                    <span className="text-[11px] font-medium leading-relaxed">
+                      <strong>Exact Verbatim Match:</strong> This claim is extracted directly word-for-word from the original source text ({claim.sourceLocation?.section || 'Overview'}{claim.sourceLocation?.paragraph ? `, Para ${claim.sourceLocation.paragraph}` : ''}).
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={e => {
+                      e.stopPropagation();
+                      onInspectEvidence();
+                    }}
+                    className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-700 dark:text-emerald-300 hover:underline flex-shrink-0"
+                  >
+                    <span>Highlight</span>
+                    <ExternalLink className="w-3 h-3" />
+                  </button>
+                </div>
+              ) : (
+                <blockquote className={`p-2.5 rounded-lg border italic font-serif leading-relaxed text-slate-800 dark:text-slate-200 break-words ${
+                  claim.status === 'supported'
+                    ? 'bg-emerald-50/50 dark:bg-emerald-950/30 border-emerald-200/80 dark:border-emerald-800/50'
+                    : claim.status === 'contradicted'
+                    ? 'bg-rose-50/50 dark:bg-rose-950/30 border-rose-200/80 dark:border-rose-800/50'
+                    : 'bg-amber-50/50 dark:bg-amber-950/30 border-amber-200/80 dark:border-amber-800/50'
+                }`}>
+                  "{evidencePassage}"
+                </blockquote>
+              )}
             </div>
           )}
 

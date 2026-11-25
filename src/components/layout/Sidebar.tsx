@@ -48,14 +48,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
     >
       {/* Sidebar Header */}
       <div
-        className={`flex items-center justify-between h-16 px-4 border-b border-slate-200 dark:border-slate-800 ${
-          collapsed ? 'justify-center' : ''
+        className={`flex items-center h-16 border-b border-slate-200 dark:border-slate-800 transition-all ${
+          collapsed ? 'justify-between px-3' : 'justify-between px-4'
         }`}
       >
         {!collapsed ? (
-          <Logo size="md" showTagline={false} />
+          <Logo size="md" showTagline={false} showText={true} />
         ) : (
-          <Logo size="sm" showTagline={false} />
+          <Logo size="sm" showTagline={false} showText={false} />
         )}
 
         {/* Desktop Collapse Toggle */}
@@ -63,7 +63,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
           type="button"
           onClick={onToggleCollapse}
           aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-          className="hidden md:flex p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-charcoal-800 focus:outline-none transition-colors"
+          title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+          className="hidden md:flex p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-charcoal-800 focus:outline-none transition-colors flex-shrink-0"
         >
           {collapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
         </button>

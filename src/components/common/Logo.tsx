@@ -4,10 +4,16 @@ import { Link } from 'react-router-dom';
 interface LogoProps {
   size?: 'sm' | 'md' | 'lg' | 'xl';
   showTagline?: boolean;
+  showText?: boolean;
   clickable?: boolean;
 }
 
-export const Logo: React.FC<LogoProps> = ({ size = 'md', showTagline = false, clickable = true }) => {
+export const Logo: React.FC<LogoProps> = ({
+  size = 'md',
+  showTagline = false,
+  showText = true,
+  clickable = true,
+}) => {
   const iconSizes = {
     sm: 'w-6 h-6',
     md: 'w-8 h-8',
@@ -115,17 +121,19 @@ export const Logo: React.FC<LogoProps> = ({ size = 'md', showTagline = false, cl
         </svg>
       </div>
 
-      <div className="flex flex-col">
-        <div className="flex items-center tracking-tight">
-          <span className={`text-slate-900 dark:text-white ${textSizes[size]}`}>Clarity</span>
-          <span className={`text-brand-600 dark:text-brand-400 ${textSizes[size]}`}>AI</span>
+      {showText && (
+        <div className="flex flex-col">
+          <div className="flex items-center tracking-tight">
+            <span className={`text-slate-900 dark:text-white ${textSizes[size]}`}>Clarity</span>
+            <span className={`text-brand-600 dark:text-brand-400 ${textSizes[size]}`}>AI</span>
+          </div>
+          {showTagline && (
+            <span className="text-[10px] text-slate-500 dark:text-slate-400 font-medium tracking-wide uppercase">
+              Factual Document Intelligence
+            </span>
+          )}
         </div>
-        {showTagline && (
-          <span className="text-[10px] text-slate-500 dark:text-slate-400 font-medium tracking-wide uppercase">
-            Factual Document Intelligence
-          </span>
-        )}
-      </div>
+      )}
     </div>
   );
 

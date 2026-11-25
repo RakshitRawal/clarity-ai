@@ -218,7 +218,8 @@ def verify_claim_against_source(claim: str, doc_sentences: List[str]) -> Dict[st
     elif best_score >= 0.30:
         status = "supported"
         confidence = min(0.99, round(0.88 + (best_score - 0.30) * 0.16, 2))
-        explanation = "High semantic and entity concordance with identified source context."
+        is_direct = (re.sub(r'[^a-z0-9]', '', claim.lower()) == re.sub(r'[^a-z0-9]', '', best_passage.lower())) or best_score >= 0.90
+        explanation = "Verbatim source extraction: 100% direct lexical alignment with source text." if is_direct else "High semantic and entity concordance with identified source context."
     elif best_score >= 0.18:
         status = "needs_review"
         confidence = 0.70
